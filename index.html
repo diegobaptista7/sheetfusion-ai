@@ -2878,7 +2878,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
     function updateClientIdBadge() {
       const cid = getClientId();
       const badge = document.getElementById('setupStatusBadge');
-      const banner = document.getElementById('setupBanner');
+      
       if (badge) {
         if (cid && cid !== 'YOUR_CLIENT_ID_HERE') {
           badge.className = 'badge badge-success';
@@ -2888,9 +2888,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
           badge.textContent = currentLanguage === 'es' ? 'Pendiente' : 'Pending';
         }
       }
-      if (banner) {
-        banner.classList.add('hidden'); // Nunca mostrar banner de advertencia a los usuarios
-      }
+      
     }
 
     // =========================================================================
