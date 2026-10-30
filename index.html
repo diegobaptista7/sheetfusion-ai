@@ -1526,7 +1526,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
     <div class="header-actions">
       <!-- Tour Guiado Interactivo -->
       <button class="btn btn-secondary btn-sm" id="btnStartTour" onclick="startGuidedTour(true)" title="Ver recorrido interactivo de DataHub">
-        🧭 <span id="t_tourBtn">Tour</span>
+        🧭 <span>Tour</span>
       </button>
       <!-- File Protocol Warning Alert (if loaded from file://) -->
       <span id="fileProtocolPill" class="badge badge-warning hidden" title="Google OAuth requires http://localhost or a web server">
@@ -2325,30 +2325,30 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
        MODAL 1: SETUP & OAUTH CLIENT ID CONFIGURATION
        ===================================================================== -->
     <!-- =====================================================================
-       Google OAuth Setup Modal (Amigable)
+       Google OAuth Setup Modal (Amigable y Sin IDs de traducción que fallen)
        ===================================================================== -->
   <div id="modalSetup" class="modal-backdrop">
-    <div class="modal" style="max-width: 500px; border-radius: 14px;">
+    <div class="modal" style="max-width: 480px; border-radius: 14px;">
       <div class="modal-header">
-        <h3 class="modal-title">🔑 <span id="t_setupModalTitle">Acceso a Google Workspace</span></h3>
+        <h3 class="modal-title">🔑 <span>Vincular Google Drive y Sheets</span></h3>
         <button class="btn btn-secondary btn-icon" onclick="closeSetupModal()">✕</button>
       </div>
       <div class="modal-body">
-        <p style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem;" id="t_setupModalIntro">
-          Para que los usuarios puedan iniciar sesión con su correo de Google y conectar sus hojas de Sheets y Docs, ingresa el <strong>Client ID</strong> de la aplicación:
+        <p style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5;">
+          Para que cualquier persona pueda iniciar sesión directamente seleccionando su correo y conceder acceso a sus hojas de Google Drive, ingresa el <strong>Client ID de Google</strong> de tu aplicación:
         </p>
 
         <div class="form-group">
-          <label class="form-label" for="inputClientId">Client ID de Google:</label>
-          <input type="text" id="inputClientId" class="form-control" placeholder="123456789-abcdef.apps.googleusercontent.com" style="font-family: monospace; font-size: 0.85rem;">
-          <span class="form-hint" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.4rem; display: block;">
-            Solo se configura una vez para la herramienta. Todos los visitantes podrán ingresar seleccionando su correo.
+          <label class="form-label" for="inputClientId" style="font-weight: 600; font-size: 0.82rem;">Client ID de la aplicación:</label>
+          <input type="text" id="inputClientId" class="form-control" placeholder="ej. 123456789-xxxxxxxx.apps.googleusercontent.com" style="font-family: monospace; font-size: 0.82rem;">
+          <span class="form-hint" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.4rem; display: block;">
+            💡 Una vez colocado, esta ventana <strong>no volverá a aparecer a nadie</strong>. Los usuarios simplemente harán clic en Iniciar Sesión y Google les pedirá acceso a su Drive.
           </span>
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.25rem;">
-          <button class="btn btn-secondary btn-sm" onclick="closeSetupModal()">Cancelar</button>
-          <button class="btn btn-primary btn-sm" onclick="saveClientIdAndSignIn()">Guardar y Conectar</button>
+          <button class="btn btn-secondary btn-sm" onclick="closeSetupModal()">Cerrar</button>
+          <button class="btn btn-primary btn-sm" onclick="saveClientIdAndSignIn()">Guardar y Continuar</button>
         </div>
       </div>
     </div>
@@ -3068,9 +3068,9 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
     function applyLanguageUI() {
       document.querySelectorAll('[id^="t_"]').forEach(el => {
         const key = el.id.substring(2);
-        const translated = t(key);
-        if (translated) {
-          el.textContent = translated;
+        // Solo actualizar si existe una traducción real, nunca poner el nombre de la variable
+        if (i18n[currentLanguage] && i18n[currentLanguage][key]) {
+          el.textContent = i18n[currentLanguage][key];
         }
       });
       updateClientIdBadge();
