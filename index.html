@@ -60,7 +60,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SheetFusion AI — Extracción, Fusión, Filtros y Análisis con IA</title>
+  <title>DataHub — Extracción, Unión, Filtros y Análisis con IA</title>
   <!-- Google Identity Services (GIS) & Google API Client -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
@@ -1351,19 +1351,18 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
 
     
     /* =====================================================================
-       SHEETFUSION AI GUIDED TOUR STYLES
+       DATAHUB NON-INVASIVE FLOATING TOUR (Esquina inferior, sin bloqueo)
        ===================================================================== */
     .tour-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(15, 23, 42, 0.75);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      z-index: 99999;
+      background: transparent !important;
+      pointer-events: none !important;
+      z-index: 10000;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 1.25rem;
+      align-items: flex-end;
+      justify-content: flex-end;
+      padding: 1.5rem;
       opacity: 0;
       visibility: hidden;
       transition: opacity 0.25s ease, visibility 0.25s ease;
@@ -1373,120 +1372,111 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       visibility: visible;
     }
     .tour-card {
+      pointer-events: auto !important;
       background: #ffffff;
       color: #1e293b;
-      width: 100%;
-      max-width: 580px;
-      border-radius: 16px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      width: 410px;
+      max-width: calc(100vw - 2.5rem);
+      border-radius: 14px;
+      box-shadow: 0 16px 40px -4px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.08);
       overflow: hidden;
-      animation: tourCardIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       display: flex;
       flex-direction: column;
+      animation: tourSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      border-left: 4px solid var(--primary, #1a73e8);
     }
-    @keyframes tourCardIn {
-      from {
-        transform: scale(0.92) translateY(12px);
-        opacity: 0;
-      }
-      to {
-        transform: scale(1) translateY(0);
-        opacity: 1;
-      }
+    @keyframes tourSlideIn {
+      from { transform: translateY(24px) scale(0.96); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
     }
     .tour-header {
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-      color: #ffffff;
-      padding: 1.15rem 1.4rem;
+      background: #f8fafc;
+      color: #1e293b;
+      padding: 0.85rem 1.15rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid #e2e8f0;
     }
     .tour-badge {
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
-      background: rgba(99, 102, 241, 0.25);
-      border: 1px solid rgba(129, 140, 248, 0.4);
-      color: #c7d2fe;
-      font-size: 0.75rem;
-      font-weight: 600;
-      padding: 0.2rem 0.6rem;
-      border-radius: 9999px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      gap: 0.35rem;
+      background: #e0e7ff;
+      color: #3730a3;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      letter-spacing: 0.03em;
     }
     .tour-close-btn {
       background: transparent;
       border: none;
-      color: #94a3b8;
-      font-size: 1.25rem;
+      color: #64748b;
+      font-size: 1.15rem;
       cursor: pointer;
-      padding: 0.25rem 0.5rem;
-      border-radius: 6px;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
       transition: all 0.15s ease;
       line-height: 1;
     }
     .tour-close-btn:hover {
-      color: #ffffff;
-      background: rgba(255, 255, 255, 0.1);
+      color: #0f172a;
+      background: #e2e8f0;
     }
     .tour-body {
-      padding: 1.5rem 1.5rem 1.15rem 1.5rem;
-      font-size: 0.95rem;
-      line-height: 1.6;
+      padding: 1.15rem 1.25rem 0.85rem 1.25rem;
+      font-size: 0.88rem;
+      line-height: 1.5;
       color: #334155;
     }
-    .tour-icon-wrap {
-      width: 54px;
-      height: 54px;
-      border-radius: 14px;
+    .tour-title-row {
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 1.75rem;
-      margin-bottom: 0.85rem;
-      background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+      gap: 0.6rem;
+      margin-bottom: 0.4rem;
+    }
+    .tour-icon-wrap {
+      font-size: 1.35rem;
+      line-height: 1;
     }
     .tour-title {
-      font-size: 1.25rem;
+      font-size: 1.05rem;
       font-weight: 700;
       color: #0f172a;
-      margin-bottom: 0.4rem;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.01em;
     }
     .tour-desc {
       color: #475569;
-      font-size: 0.9rem;
-      margin-bottom: 1.15rem;
+      font-size: 0.84rem;
+      margin-bottom: 0.75rem;
+      line-height: 1.45;
     }
     .tour-feature-list {
       background: #f8fafc;
       border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 0.75rem 1rem;
-      margin-bottom: 0.85rem;
-      font-size: 0.84rem;
+      border-radius: 8px;
+      padding: 0.65rem 0.85rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.8rem;
       color: #1e293b;
       display: flex;
       flex-direction: column;
-      gap: 0.45rem;
+      gap: 0.35rem;
     }
     .tour-feature-item {
       display: flex;
       align-items: flex-start;
-      gap: 0.5rem;
+      gap: 0.45rem;
     }
     .tour-feature-item span.bullet {
-      color: #4f46e5;
+      color: var(--primary, #1a73e8);
       font-weight: bold;
-      font-size: 0.95rem;
-      line-height: 1.2;
+      font-size: 0.85rem;
     }
     .tour-footer {
-      padding: 0.9rem 1.4rem 1.15rem 1.4rem;
+      padding: 0.75rem 1.15rem 0.85rem 1.15rem;
       background: #f8fafc;
       border-top: 1px solid #e2e8f0;
       display: flex;
@@ -1496,24 +1486,24 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
     .tour-dots {
       display: flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.35rem;
     }
     .tour-dot {
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
       border-radius: 9999px;
       background: #cbd5e1;
       transition: all 0.2s ease;
       cursor: pointer;
     }
     .tour-dot.active {
-      background: #4f46e5;
-      width: 22px;
+      background: var(--primary, #1a73e8);
+      width: 18px;
     }
     .tour-actions {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
+      gap: 0.5rem;
     }
 
   </style>
@@ -1527,27 +1517,21 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
     <div class="brand">
       <span class="brand-icon">⚡📊</span>
       <div>
-        <h1 class="brand-title">SheetFusion AI</h1>
-        <span class="brand-subtitle" id="t_headerSubtitle">Smart Data Hub para Google Sheets, Docs y Archivos</span>
+        <h1 class="brand-title">DataHub</h1>
+        <span class="brand-subtitle" id="t_headerSubtitle">Plataforma Inteligente para Google Sheets, Docs y Archivos</span>
       </div>
-      </div>
+    </div>
     </div>
 
     <div class="header-actions">
       <!-- Tour Guiado Interactivo -->
-      <button class="btn btn-secondary btn-sm" id="btnStartTour" onclick="startGuidedTour(true)" title="Ver recorrido interactivo de SheetFusion AI">
-        🧭 <span id="t_tourBtn">Tour Guiado</span>
+      <button class="btn btn-secondary btn-sm" id="btnStartTour" onclick="startGuidedTour(true)" title="Ver recorrido interactivo de DataHub">
+        🧭 <span id="t_tourBtn">Tour</span>
       </button>
       <!-- File Protocol Warning Alert (if loaded from file://) -->
       <span id="fileProtocolPill" class="badge badge-warning hidden" title="Google OAuth requires http://localhost or a web server">
         ⚠️ Protocolo local file://
       </span>
-
-      <!-- Client ID Setup Button -->
-      <button class="btn btn-secondary btn-sm" id="btnOpenSetup" onclick="openSetupModal()">
-        ⚙️ <span id="t_setupBtn">Configurar OAuth</span>
-        <span id="setupStatusBadge" class="badge badge-warning">Pendiente</span>
-      </button>
 
       <!-- Language Switcher -->
       <div class="lang-toggle">
@@ -1605,16 +1589,6 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
        Main App Body
        ===================================================================== -->
   <main class="app-main">
-
-    <!-- Client ID Missing Setup Banner -->
-    <div id="setupBanner" class="banner banner-warning">
-      <div class="banner-content">
-        <span class="banner-icon">⚡</span>
-        <div>
-          <strong id="t_bannerTitle">Configuración de Google OAuth requerida</strong>
-          <p id="t_bannerText">Para conectarte con tus archivos de Google Sheets y Docs, debes configurar tu Client ID de Google Cloud Console.</p>
-        </div>
-      </div>
       <button class="btn btn-secondary btn-sm" onclick="openSetupModal()" id="t_bannerBtn">Configurar ahora</button>
     </div>
 
@@ -2350,63 +2324,35 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
   <!-- =====================================================================
        MODAL 1: SETUP & OAUTH CLIENT ID CONFIGURATION
        ===================================================================== -->
+    <!-- =====================================================================
+       Google OAuth Setup Modal (Amigable)
+       ===================================================================== -->
   <div id="modalSetup" class="modal-backdrop">
-    <div class="modal">
+    <div class="modal" style="max-width: 500px; border-radius: 14px;">
       <div class="modal-header">
-        <h3 class="modal-title">⚙️ <span id="t_setupModalTitle">Configuración de Google OAuth</span></h3>
+        <h3 class="modal-title">🔑 <span id="t_setupModalTitle">Acceso a Google Workspace</span></h3>
         <button class="btn btn-secondary btn-icon" onclick="closeSetupModal()">✕</button>
       </div>
       <div class="modal-body">
-        <p style="margin-bottom: 1rem; color: var(--text-secondary);" id="t_setupModalIntro">
-          Para acceder a las APIs de Google Drive, Sheets y Docs desde el navegador sin un servidor backend, se utiliza <strong>Google Identity Services (GIS)</strong> con OAuth 2.0.
+        <p style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem;" id="t_setupModalIntro">
+          Para que los usuarios puedan iniciar sesión con su correo de Google y conectar sus hojas de Sheets y Docs, ingresa el <strong>Client ID</strong> de la aplicación:
         </p>
 
-        <div class="setup-step" data-step="1">
-          <strong id="t_step1Title">Crea un proyecto en Google Cloud Console</strong>
-          <p id="t_step1Desc">Ve a <a href="https://console.cloud.google.com/" target="_blank" style="color: var(--primary);">Google Cloud Console</a> y crea un nuevo proyecto o selecciona uno existente.</p>
+        <div class="form-group">
+          <label class="form-label" for="inputClientId">Client ID de Google:</label>
+          <input type="text" id="inputClientId" class="form-control" placeholder="123456789-abcdef.apps.googleusercontent.com" style="font-family: monospace; font-size: 0.85rem;">
+          <span class="form-hint" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.4rem; display: block;">
+            Solo se configura una vez para la herramienta. Todos los visitantes podrán ingresar seleccionando su correo.
+          </span>
         </div>
 
-        <div class="setup-step" data-step="2">
-          <strong id="t_step2Title">Habilita las 3 APIs de Google Workspace</strong>
-          <p id="t_step2Desc">En <em>APIs & Services &gt; Library</em>, habilita:</p>
-          <ul style="margin-left: 1.25rem; font-size: 0.8rem; margin-top: 0.25rem;">
-            <li><strong>Google Drive API</strong></li>
-            <li><strong>Google Sheets API</strong></li>
-            <li><strong>Google Docs API</strong></li>
-          </ul>
+        <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.25rem;">
+          <button class="btn btn-secondary btn-sm" onclick="closeSetupModal()">Cancelar</button>
+          <button class="btn btn-primary btn-sm" onclick="saveClientIdAndSignIn()">Guardar y Conectar</button>
         </div>
-
-        <div class="setup-step" data-step="3">
-          <strong id="t_step3Title">Configura la pantalla de consentimiento (OAuth Consent Screen)</strong>
-          <p id="t_step3Desc">Selecciona tipo <strong>External</strong>, ingresa un nombre para tu app y agrega tu correo de Gmail en <strong>Test Users</strong> (Usuarios de prueba).</p>
-        </div>
-
-        <div class="setup-step" data-step="4">
-          <strong id="t_step4Title">Crea credenciales OAuth 2.0 (Aplicación web)</strong>
-          <p id="t_step4Desc">En <em>APIs & Services &gt; Credentials</em>, haz clic en <em>Create Credentials &gt; OAuth client ID</em>:</p>
-          <p style="font-size: 0.8rem; margin-top: 0.25rem;">• Tipo de aplicación: <strong>Web application</strong></p>
-          <p style="font-size: 0.8rem;">• En <strong>Authorized JavaScript origins</strong> (Orígenes de JavaScript autorizados), añade:</p>
-          <div class="code-box">
-            <span>http://localhost:8000</span>
-            <button onclick="copyText('http://localhost:8000')">Copiar</button>
-          </div>
-          <div class="code-box">
-            <span>http://localhost:5500</span>
-            <button onclick="copyText('http://localhost:5500')">Copiar</button>
-          </div>
-          <div class="code-box">
-            <span>http://127.0.0.1:8000</span>
-            <button onclick="copyText('http://127.0.0.1:8000')">Copiar</button>
-          </div>
-        </div>
-
-        <div class="setup-step" data-step="5">
-          <strong id="t_step5Title">Pega tu Client ID aquí:</strong>
-          <div class="form-group" style="margin-top: 0.5rem;">
-            <input type="text" id="inputClientId" class="form-control" placeholder="1234567890-abcdefghijklmn.apps.googleusercontent.com" />
-            <div class="form-hint" id="t_clientIdHint">Se guardará de forma segura en el almacenamiento local (localStorage) de tu navegador.</div>
-          </div>
-        </div>
+      </div>
+    </div>
+  </div>
 
       </div>
       <div class="modal-footer">
@@ -2776,7 +2722,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
     }
 
     // =========================================================================
-    // INITIALIZATION & STORAGE (SheetFusion AI)
+    // INITIALIZATION & STORAGE (DataHub)
     // =========================================================================
     const SESSION_STORAGE_KEY = 'sheetfusion_session';
     const INACTIVITY_TIMEOUT_MS = 60 * 60 * 1000; // 1 hora exacta de inactividad (3,600,000 ms)
@@ -2830,7 +2776,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
 
         // Verificación estricta de 1 hora de inactividad
         if (session.lastActivity && (now - session.lastActivity > INACTIVITY_TIMEOUT_MS)) {
-          console.warn('[SheetFusion AI] Sesión expirada automáticamente tras 1 hora de inactividad.');
+          console.warn('[DataHub] Sesión expirada automáticamente tras 1 hora de inactividad.');
           clearUserSession();
           return { expired: true };
         }
@@ -2875,7 +2821,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         loadSavedAIConfig();
         updateAuthUI();
 
-        console.log(`[SheetFusion AI] Sesión restaurada con éxito para: ${currentWorkspaceEmail}`);
+        console.log(`[DataHub] Sesión restaurada con éxito para: ${currentWorkspaceEmail}`);
       } else {
         // Sin sesión o expirada por inactividad: inicio limpio
         connectedFiles = [];
@@ -2907,7 +2853,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       }, 60000);
 
       // Tour guiado automático la primera vez
-      const tourDone = localStorage.getItem('sheetfusion_tour_completed');
+      const tourDone = localStorage.getItem('datahub_tour_completed');
       if (!tourDone) {
         setTimeout(() => {
           startGuidedTour(false);
@@ -2933,14 +2879,17 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       const cid = getClientId();
       const badge = document.getElementById('setupStatusBadge');
       const banner = document.getElementById('setupBanner');
-      if (cid && cid !== 'YOUR_CLIENT_ID_HERE') {
-        badge.className = 'badge badge-success';
-        badge.textContent = currentLanguage === 'es' ? 'Configurado' : 'Configured';
-        banner.classList.add('hidden');
-      } else {
-        badge.className = 'badge badge-warning';
-        badge.textContent = currentLanguage === 'es' ? 'Pendiente' : 'Pending';
-        banner.classList.remove('hidden');
+      if (badge) {
+        if (cid && cid !== 'YOUR_CLIENT_ID_HERE') {
+          badge.className = 'badge badge-success';
+          badge.textContent = currentLanguage === 'es' ? 'Configurado' : 'Configured';
+        } else {
+          badge.className = 'badge badge-warning';
+          badge.textContent = currentLanguage === 'es' ? 'Pendiente' : 'Pending';
+        }
+      }
+      if (banner) {
+        banner.classList.add('hidden'); // Nunca mostrar banner de advertencia a los usuarios
       }
     }
 
@@ -3014,7 +2963,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       const normalizedEmail = email.toLowerCase().trim();
       currentWorkspaceEmail = normalizedEmail;
 
-      console.log(`[SheetFusion AI] Espacio personal activo: ${normalizedEmail}`);
+      console.log(`[DataHub] Espacio personal activo: ${normalizedEmail}`);
 
       // Cargar archivos y configuraciones de este usuario específico
       loadSavedState();
@@ -3081,7 +3030,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         const storedTargets = getUserItem('export_targets');
         exportTargets = storedTargets ? JSON.parse(storedTargets) : [];
       } catch (err) {
-        console.warn('[SheetFusion AI] Error al leer estado guardado', err);
+        console.warn('[DataHub] Error al leer estado guardado', err);
         connectedFiles = [];
         quickLinks = [];
         exportTargets = [];
@@ -6165,6 +6114,23 @@ REGLAS ABSOLUTAS:
     // =========================================================================
     // SETUP & MODALS
     // =========================================================================
+    
+    function saveClientIdAndSignIn() {
+      const input = document.getElementById('inputClientId');
+      const val = input ? input.value.trim() : '';
+      if (!val) {
+        showToast(currentLanguage === 'es' ? 'Ingresa un Client ID válido.' : 'Enter a valid Client ID.', 'warning');
+        return;
+      }
+      localStorage.setItem('pd_client_id', val);
+      closeSetupModal();
+      updateClientIdBadge();
+      initGIS();
+      if (tokenClient) {
+        tokenClient.requestAccessToken({ prompt: 'consent' });
+      }
+    }
+
     function openSetupModal() {
       const input = document.getElementById('inputClientId');
       const current = getClientId();
@@ -6247,14 +6213,14 @@ REGLAS ABSOLUTAS:
     }
   
     // =========================================================================
-    // CONTROLADOR DEL TOUR GUIADO INTERACTIVO (SheetFusion AI)
+    // CONTROLADOR DEL TOUR GUIADO INTERACTIVO (DataHub)
     // =========================================================================
     const TOUR_STEPS = [
       {
         icon: '✨',
         badge: 'Paso 1 de 6',
         tab: 'tab-connect',
-        title: '¡Bienvenido a SheetFusion AI!',
+        title: '¡Bienvenido a DataHub!',
         desc: 'Tu plataforma inteligente todo-en-uno para Google Sheets, Google Docs y archivos locales. Cada persona que inicia sesión cuenta con un espacio personal 100% privado y protegido.',
         features: [
           { bullet: '🔒', text: '<strong>Espacios Privados:</strong> Tu sesión con Google aísla tus archivos para que nadie más tenga acceso a ellos.' },
@@ -6413,12 +6379,12 @@ REGLAS ABSOLUTAS:
     function skipTour() {
       const overlay = document.getElementById('tourOverlay');
       if (overlay) overlay.classList.remove('active');
-      localStorage.setItem('sheetfusion_tour_completed', 'true');
+      localStorage.setItem('datahub_tour_completed', 'true');
     }
 
     function finishTour() {
       skipTour();
-      showToast(currentLanguage === 'es' ? '¡Tour completado! Ya puedes comenzar a usar SheetFusion AI.' : 'Tour completed! Enjoy SheetFusion AI.', 'success');
+      showToast(currentLanguage === 'es' ? '¡Tour completado! Ya puedes comenzar a usar DataHub.' : 'Tour completed! Enjoy DataHub.', 'success');
     }
 
   </script>
@@ -6426,42 +6392,48 @@ REGLAS ABSOLUTAS:
   <!-- =====================================================================
        SHEETFUSION AI GUIDED TOUR MODAL
        ===================================================================== -->
-  <div id="tourOverlay" class="tour-overlay" onclick="handleTourBackdropClick(event)">
+  <!-- =====================================================================
+       DATAHUB GUIDED TOUR (Floating, non-invasive)
+       ===================================================================== -->
+  <div id="tourOverlay" class="tour-overlay">
     <div class="tour-card" onclick="event.stopPropagation()">
       <div class="tour-header">
-        <div style="display: flex; align-items: center; gap: 0.6rem;">
-          <span class="tour-badge">🧭 Guía Interactiva</span>
-          <span id="tourStepBadge" style="font-size: 0.75rem; color: #94a3b8;">Paso 1 de 6</span>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span class="tour-badge">🧭 Tour</span>
+          <span id="tourStepBadge" style="font-size: 0.75rem; color: #64748b; font-weight: 600;">1 de 6</span>
         </div>
-        <button class="tour-close-btn" onclick="skipTour()" title="Cerrar tour (puedes volver a abrirlo en cualquier momento)">✕</button>
+        <button class="tour-close-btn" onclick="skipTour()" title="Cerrar tour">✕</button>
       </div>
 
       <div class="tour-body">
-        <div class="tour-icon-wrap" id="tourIcon">✨</div>
-        <h3 class="tour-title" id="tourTitle">Bienvenido a SheetFusion AI</h3>
-        <p class="tour-desc" id="tourDesc">Tu plataforma centralizada para conectar, unir, filtrar y transformar hojas de Google Sheets y documentos con Inteligencia Artificial.</p>
+        <div class="tour-title-row">
+          <span class="tour-icon-wrap" id="tourIcon">✨</span>
+          <span class="tour-title" id="tourTitle">Bienvenido a DataHub</span>
+        </div>
+        <p class="tour-desc" id="tourDesc">Centro inteligente para conectar, unir, filtrar y transformar datos con IA.</p>
         <div class="tour-feature-list" id="tourFeatures">
           <!-- Elementos dinámicos del tour -->
         </div>
       </div>
 
       <div class="tour-footer">
-        <button class="btn btn-secondary btn-sm" style="color: #64748b; font-size: 0.8rem;" onclick="skipTour()">
-          Saltar tour
+        <button class="btn btn-secondary btn-sm" style="color: #64748b; font-size: 0.78rem; padding: 0.25rem 0.5rem;" onclick="skipTour()">
+          Saltar
         </button>
         <div class="tour-dots" id="tourDots">
-          <!-- Indicadores de paso -->
+          <!-- Indicadores -->
         </div>
         <div class="tour-actions">
-          <button class="btn btn-secondary btn-sm" id="btnTourPrev" onclick="prevTourStep()" disabled>
+          <button class="btn btn-secondary btn-sm" style="font-size: 0.8rem; padding: 0.35rem 0.65rem;" id="btnTourPrev" onclick="prevTourStep()" disabled>
             ← Anterior
           </button>
-          <button class="btn btn-primary btn-sm" id="btnTourNext" onclick="nextTourStep()">
+          <button class="btn btn-primary btn-sm" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;" id="btnTourNext" onclick="nextTourStep()">
             Siguiente →
           </button>
         </div>
       </div>
     </div>
+  </div>
   </div>
 
 </body>

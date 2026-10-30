@@ -1,8 +1,8 @@
-# ⚡📊 SheetFusion AI
+# ⚡📊 DataHub
 
-> **Smart Data Hub para Google Sheets, Google Docs y Archivos**
+> **Plataforma Inteligente para Google Sheets, Docs y Archivos**
 
-Plataforma web independiente para conectar, extraer, filtrar, unir y transformar datos de hojas de cálculo y documentos con Inteligencia Artificial (Groq, Gemini, OpenAI, Claude).
+Plataforma web para conectar, extraer, filtrar, unir y transformar datos de hojas de cálculo y documentos con Inteligencia Artificial (Groq, Gemini, OpenAI, Claude).
 
 ## 🚀 Características
 - **🔒 Espacios Privados Aislados**: Sesión segura con Google OAuth2. Cada usuario tiene su propio espacio de trabajo privado donde sus archivos no son visibles para otros.
@@ -12,7 +12,7 @@ Plataforma web independiente para conectar, extraer, filtrar, unir y transformar
 - **🔗 Unión Inteligente de Archivos**: Fusión consolidada de múltiples hojas y pestañas en una tabla maestra unificada.
 - **🤖 Asistente de IA (2025/2026)**: Modelos actualizados de Groq (GPT-OSS, Llama 3.3, DeepSeek R1), Google Gemini (2.5 Flash / 2.5 Pro), OpenAI (GPT-4.1) y Anthropic Claude (Haiku 5.5, Sonnet 5.5).
 - **📤 Exportación**: Nueva hoja de Google Sheets, sobreescritura directa o descarga local en Excel (.xlsx), CSV o JSON.
-- **🧭 Tour Guiado Interactivo**: Recorrido paso a paso para usuarios nuevos y botón de ayuda siempre disponible en la cabecera.
+- **🧭 Tour Guiado Flotante**: Recorrido no invasivo para conocer lo básico sin tapar la pantalla, accesible en cualquier momento desde el botón **Tour**.
 
 ## 🌐 Acceso Web
-Esta aplicación funciona como una Single-Page Application (SPA) 100% estática sin backend, alojada de forma permanente y gratuita.
+- **Enlace de Producción:** [https://diegobaptista7.github.io/sheetfusion-ai/](https://diegobaptista7.github.io/sheetfusion-ai/)
