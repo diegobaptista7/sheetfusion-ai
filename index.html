@@ -40,7 +40,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
 
 5. CONFIGURA EL CLIENT ID:
    - Opcion A: Reemplaza 'YOUR_CLIENT_ID_HERE' abajo en el codigo:
-     const DEFAULT_CLIENT_ID = 'TU_CLIENT_ID_DE_GOOGLE.apps.googleusercontent.com';
+     const DEFAULT_CLIENT_ID = '454849946922-7jevs45jdgfno2u97dq5dtkhr6n3g6hc.apps.googleusercontent.com';
    - Opcion B: Abre la app en tu navegador, haz clic en el boton 'Configurar OAuth'
      en la esquina superior derecha y pega tu Client ID. Se guardara en localStorage.
 
@@ -2416,7 +2416,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
      */
 
     // Placeholder Client ID (Can be replaced directly in code or configured in UI)
-    const DEFAULT_CLIENT_ID = 'YOUR_CLIENT_ID_HERE';
+    const DEFAULT_CLIENT_ID = '454849946922-7jevs45jdgfno2u97dq5dtkhr6n3g6hc.apps.googleusercontent.com';
 
     // OAuth Scopes
     const SCOPES = [
@@ -3126,18 +3126,17 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
 
     function handleAuthClick() {
       const cid = getClientId();
-      if (!cid || cid === 'YOUR_CLIENT_ID_HERE') {
-        openSetupModal();
-        showToast(t('clientIdRequired'), 'warning');
-        return;
-      }
       if (!tokenClient) {
         initGIS();
       }
       if (tokenClient) {
         tokenClient.requestAccessToken({ prompt: 'consent' });
       } else {
-        openSetupModal();
+        // En caso de que el script de Google esté cargando, reintentar en 300ms
+        setTimeout(() => {
+          if (!tokenClient) initGIS();
+          if (tokenClient) tokenClient.requestAccessToken({ prompt: 'consent' });
+        }, 300);
       }
     }
 
