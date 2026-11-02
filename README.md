@@ -1,4 +1,8 @@
-# ⚡📊 DataHub
+<p align="center">
+  <img src="logo.png" alt="DataHub Logo" width="96" style="border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+</p>
+
+# ⚡ DataHub
 
 > **Plataforma Inteligente para Google Sheets, Docs y Archivos**
 
@@ -16,3 +20,5 @@ Plataforma web para conectar, extraer, filtrar, unir y transformar datos de hoja
 
 ## 🌐 Acceso Web
 - **Enlace de Producción:** [https://diegobaptista7.github.io/sheetfusion-ai/](https://diegobaptista7.github.io/sheetfusion-ai/)
+- **Política de Privacidad:** [https://diegobaptista7.github.io/sheetfusion-ai/privacy.html](https://diegobaptista7.github.io/sheetfusion-ai/privacy.html)
+- **Términos de Servicio:** [https://diegobaptista7.github.io/sheetfusion-ai/terms.html](https://diegobaptista7.github.io/sheetfusion-ai/terms.html)

@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Términos de Servicio - DataHub</title>
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="apple-touch-icon" href="logo.png">
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -16,12 +18,27 @@
     }
     .card {
       background: #ffffff;
-      padding: 32px;
-      border-radius: 12px;
+      padding: 36px;
+      border-radius: 16px;
       box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05);
       border: 1px solid #e2e8f0;
     }
-    h1 { color: #0f172a; margin-top: 0; font-size: 26px; }
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 18px;
+    }
+    .header-logo {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+      object-fit: cover;
+    }
+    h1 { color: #0f172a; margin: 0; font-size: 24px; }
     h2 { color: #334155; margin-top: 24px; font-size: 18px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
     p, li { color: #475569; font-size: 15px; }
     a { color: #2563eb; text-decoration: none; }
@@ -31,8 +48,13 @@
 </head>
 <body>
   <div class="card">
-    <h1>Términos de Servicio de DataHub</h1>
-    <p><em>Última actualización: 2 de noviembre de 2026</em></p>
+    <div class="header-brand">
+      <img src="logo.png" alt="DataHub Logo" class="header-logo">
+      <div>
+        <h1>Términos de Servicio de DataHub</h1>
+        <p style="margin: 2px 0 0; font-size: 13px; color: #64748b;"><em>Última actualización: 2 de noviembre de 2026</em></p>
+      </div>
+    </div>
 
     <p>Al acceder o utilizar DataHub (disponible en <a href="https://diegobaptista7.github.io/sheetfusion-ai/">https://diegobaptista7.github.io/sheetfusion-ai/</a>), aceptas estar sujeto a los presentes Términos de Servicio.</p>
 
