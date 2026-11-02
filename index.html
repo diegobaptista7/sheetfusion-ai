@@ -3127,6 +3127,12 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
     }
 
     function handleAuthClick() {
+      if (window.location.protocol === 'file:') {
+        alert(currentLanguage === 'es'
+          ? '⚠️ Google bloquea el inicio de sesión desde archivos locales en el explorador de Windows (file:///)\\n\\nPor favor, ingresa desde el enlace web desplegado:\\n👉 https://diegobaptista7.github.io/sheetfusion-ai/\\n\\no desde tu servidor local:\\n👉 http://localhost:8000'
+          : '⚠️ Google OAuth blocks sign-in from local file:/// URLs.\\nPlease access via web:\\n👉 https://diegobaptista7.github.io/sheetfusion-ai/');
+        return;
+      }
       const cid = getClientId();
       if (!tokenClient) {
         initGIS();
