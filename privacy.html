@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Política de Privacidad - DataHub</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      color: #1e293b;
+      background: #f8fafc;
+    }
+    .card {
+      background: #ffffff;
+      padding: 32px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05);
+      border: 1px solid #e2e8f0;
+    }
+    h1 { color: #0f172a; margin-top: 0; font-size: 26px; }
+    h2 { color: #334155; margin-top: 24px; font-size: 18px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+    p, li { color: #475569; font-size: 15px; }
+    a { color: #2563eb; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .footer { margin-top: 32px; font-size: 13px; color: #94a3b8; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Política de Privacidad de DataHub</h1>
+    <p><em>Última actualización: 2 de noviembre de 2026</em></p>
+
+    <p>DataHub (disponible en <a href="https://diegobaptista7.github.io/sheetfusion-ai/">https://diegobaptista7.github.io/sheetfusion-ai/</a>) es una aplicación web del lado del cliente diseñada para facilitar la consulta, consolidación y análisis de datos en hojas de cálculo y documentos de Google Drive.</p>
+
+    <h2>1. Datos que recopilamos</h2>
+    <p>DataHub opera completamente en el navegador del usuario (cliente) y <strong>no almacena tus datos en servidores externos o bases de datos de terceros</strong>.</p>
+    <ul>
+      <li><strong>Identidad y Perfil de Google:</strong> Cuando inicias sesión con Google OAuth 2.0, solicitamos acceso a tu nombre, dirección de correo electrónico y foto de perfil únicamente para personalizar tu sesión en la interfaz y asociar tus archivos locales a tu espacio de trabajo.</li>
+      <li><strong>Archivos de Google Drive / Sheets / Docs:</strong> Los permisos solicitados (lectura de documentos, lectura de Drive y gestión de hojas de cálculo) se utilizan exclusivamente para leer los archivos que tú decides conectar y exportar los resultados generados según tus instrucciones.</li>
+      <li><strong>Claves de API de IA:</strong> Las claves de proveedores de Inteligencia Artificial (Groq, OpenAI, Gemini, Claude) se almacenan de forma local y cifrada/privada en el <code>localStorage</code> de tu navegador y nunca son enviadas a servidores intermedios de DataHub.</li>
+    </ul>
+
+    <h2>2. Uso y Privacidad de los Datos de Google</h2>
+    <p>El uso que DataHub hace de la información recibida a través de las APIs de Google se adhiere a la <strong><a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener">Política de Datos de Usuario de los Servicios de API de Google</a></strong>, incluidos los requisitos de Uso Limitado (Limited Use).</p>
+    <ul>
+      <li>No transferimos tus datos a terceros.</li>
+      <li>No utilizamos tus datos para publicidad ni para entrenar modelos de Inteligencia Artificial sin tu consentimiento expreso.</li>
+      <li>No compartimos tu información personal con entidades externas.</li>
+    </ul>
+
+    <h2>3. Almacenamiento Local</h2>
+    <p>Toda la configuración, enlaces a tus archivos conectados e historial de transformaciones se almacenan exclusivamente de manera local en el <code>localStorage</code> de tu navegador web. Al cerrar sesión o borrar los datos del navegador, estos datos pueden ser eliminados en cualquier momento por el usuario.</p>
+
+    <h2>4. Contacto</h2>
+    <p>Si tienes preguntas o inquietudes sobre esta Política de Privacidad, puedes ponerte en contacto a través del repositorio oficial de la aplicación en GitHub.</p>
+
+    <div class="footer">
+      &copy; 2026 DataHub. Todos los derechos reservados.
+    </div>
+  </div>
+</body>
+</html>
