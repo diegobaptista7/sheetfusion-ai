@@ -2364,14 +2364,6 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
     </div>
   </div>
 
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeSetupModal()" id="t_setupCancel">Cancelar</button>
-        <button class="btn btn-primary" onclick="saveClientId()" id="t_setupSave">Guardar Client ID</button>
-      </div>
-    </div>
-  </div>
-
   <!-- =====================================================================
        MODAL 2: GOOGLE DRIVE FILE BROWSER
        ===================================================================== -->
@@ -3688,7 +3680,6 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         saveConnectedFiles();
 
         showToast(currentLanguage === 'es' ? '¡Archivo convertido y conectado con éxito!' : 'File converted and connected successfully!', 'success');
-        selectForExtraction(fileObj.id);
       } catch (err) {
         console.error(err);
         showToast('Error al subir: ' + err.message, 'error');
