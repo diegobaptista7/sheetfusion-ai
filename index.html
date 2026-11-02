@@ -2418,11 +2418,13 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
     // Placeholder Client ID (Can be replaced directly in code or configured in UI)
     const DEFAULT_CLIENT_ID = '454849946922-7jevs45jdgfno2u97dq5dtkhr6n3g6hc.apps.googleusercontent.com';
 
-    // OAuth Scopes
+    // OAuth Scopes (Ámbitos mínimos no restringidos para acceso libre sin bloqueos de administrador)
     const SCOPES = [
-      'https://www.googleapis.com/auth/drive',
       'https://www.googleapis.com/auth/spreadsheets',
-      'https://www.googleapis.com/auth/documents.readonly'
+      'https://www.googleapis.com/auth/documents.readonly',
+      'https://www.googleapis.com/auth/drive.readonly',
+      'https://www.googleapis.com/auth/userinfo.profile',
+      'https://www.googleapis.com/auth/userinfo.email'
     ].join(' ');
 
     // Application Global State
