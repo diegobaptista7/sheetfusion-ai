@@ -1,4 +1,4 @@
-﻿<!--
+<!--
 ================================================================================
 PANEL DINAMICO - Google Workspace Data Extraction, Merge, Filter & Export Tool
 ================================================================================
@@ -2433,6 +2433,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       'https://www.googleapis.com/auth/spreadsheets',
       'https://www.googleapis.com/auth/documents.readonly',
       'https://www.googleapis.com/auth/drive.readonly',
+      'https://www.googleapis.com/auth/drive.file',
       'https://www.googleapis.com/auth/userinfo.profile',
       'https://www.googleapis.com/auth/userinfo.email'
     ].join(' ');
@@ -2773,7 +2774,8 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         user: userObj,
         accessToken: token,
         tokenExpiresAt: Date.now() + (Number(expiresInSec) || 3599) * 1000,
-        lastActivity: Date.now()
+        lastActivity: Date.now(),
+        scopeVersion: 2
       };
       localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
     }
@@ -2791,6 +2793,13 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
           console.warn('[DataHub] Sesión expirada automáticamente tras 1 hora de inactividad.');
           clearUserSession();
           return { expired: true };
+        }
+
+        // Invalidar tokens previos que no tengan el permiso de subida (drive.file)
+        if (!session.scopeVersion || session.scopeVersion < 2) {
+          console.warn('[DataHub] Sesión previa sin permisos de subida. Requiere renovación.');
+          clearUserSession();
+          return null;
         }
 
         return session;
@@ -3644,8 +3653,24 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         });
 
         if (!response.ok) {
-          const errJson = await response.json();
-          throw new Error(errJson.error ? errJson.error.message : response.statusText);
+          const errJson = await response.json().catch(() => ({}));
+          const errMsg = errJson.error ? errJson.error.message : response.statusText;
+          if (response.status === 401 || (response.status === 403 && (String(errMsg).toLowerCase().includes('insufficient') || String(errMsg).toLowerCase().includes('scope')))) {
+            accessToken = null;
+            tokenExpiresAt = 0;
+            clearUserSession();
+            updateAuthUI();
+            showToast(currentLanguage === 'es'
+              ? 'Se requieren permisos para subir archivos. Inicia sesión nuevamente para autorizarlos.'
+              : 'Upload permissions required. Please sign in again.', 'warning');
+            if (tokenClient) {
+              tokenClient.requestAccessToken({ prompt: 'consent' });
+            }
+            throw new Error(currentLanguage === 'es'
+              ? 'Permiso de subida a Drive requerido. Se abrió la ventana de autorización.'
+              : 'Upload scope required. Authorization prompt opened.');
+          }
+          throw new Error(errMsg);
         }
 
         const newFile = await response.json();
