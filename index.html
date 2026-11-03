@@ -2455,12 +2455,18 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
                 <div class="form-group">
                   <label class="form-label" for="exportTargetFile" id="t_exportTargetFileLabel">Hoja de cálculo destino:</label>
                   <select id="exportTargetFile" class="form-control" onchange="handleExportTargetFileChange()">
-                    <option value="">-- Selecciona una hoja conectada --</option>
+                    <option value="">-- Selecciona un archivo conectado --</option>
                   </select>
                 </div>
                 <div class="form-group">
                   <label class="form-label" for="exportTargetUrlInput" id="t_exportTargetUrlLabel">O ingresa URL / ID de destino:</label>
-                  <input type="text" id="exportTargetUrlInput" class="form-control" placeholder="https://docs.google.com/spreadsheets/d/.../edit" />
+                  <div style="display:flex; gap:0.5rem; align-items:center;">
+                    <input type="text" id="exportTargetUrlInput" class="form-control" placeholder="https://docs.google.com/spreadsheets/d/.../edit o .../document/d/..." style="flex:1;" />
+                    <button class="btn btn-secondary btn-sm" onclick="connectExportTargetUrl()" id="btnConnectTargetUrl" style="white-space:nowrap; flex-shrink:0;">
+                      🔗 Conectar
+                    </button>
+                  </div>
+                  <div id="exportTargetUrlStatus" style="margin-top:0.35rem; font-size:0.78rem; display:none;"></div>
                 </div>
               </div>
 
@@ -5642,18 +5648,100 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
 
     function updateExportTargetDropdown() {
       const select = document.getElementById('exportTargetFile');
-      const sheetFiles = connectedFiles.filter(f => f.type === 'sheet');
+      const format = (document.querySelector('input[name="exportFormatType"]:checked') || {}).value || 'sheets';
+      const isDocs = format === 'docs';
 
-      select.innerHTML = `<option value="">-- ${currentLanguage === 'es' ? 'Selecciona una hoja conectada' : 'Select connected sheet'} --</option>` +
-        sheetFiles.map(f => `
-          <option value="${f.id}">${escapeHtml(f.name)}</option>
-        `).join('');
+      // Show all connected files for Docs (docs+sheets), only sheets for Sheets
+      const targetFiles = isDocs
+        ? connectedFiles.filter(f => f.type === 'doc' || f.type === 'sheet')
+        : connectedFiles.filter(f => f.type === 'sheet');
+
+      const placeholder = isDocs
+        ? (currentLanguage === 'es' ? 'Selecciona un documento Docs conectado' : 'Select connected Docs document')
+        : (currentLanguage === 'es' ? 'Selecciona una hoja conectada' : 'Select connected sheet');
+
+      select.innerHTML = `<option value="">-- ${placeholder} --</option>` +
+        targetFiles.map(f => `<option value="${f.id}" data-type="${f.type}" data-url="${escapeHtml(f.url || '')}">${f.type === 'doc' ? '📘 ' : '📗 '}${escapeHtml(f.name)}</option>`).join('');
     }
 
     function handleExportTargetFileChange() {
       const select = document.getElementById('exportTargetFile');
       if (select.value) {
-        document.getElementById('exportTargetUrlInput').value = select.value;
+        const opt = select.options[select.selectedIndex];
+        const fileUrl = opt.getAttribute('data-url');
+        // Fill URL input with full URL if available, otherwise use the ID
+        document.getElementById('exportTargetUrlInput').value = fileUrl || select.value;
+        // Show connected status
+        const statusEl = document.getElementById('exportTargetUrlStatus');
+        if (statusEl) {
+          statusEl.style.display = '';
+          statusEl.innerHTML = '<span style="color:#107c41;">✅ Archivo seleccionado: <strong>' + escapeHtml(opt.textContent.trim()) + '</strong></span>';
+        }
+      }
+    }
+
+    // Connect a manually entered URL/ID for export destination
+    async function connectExportTargetUrl() {
+      const input = document.getElementById('exportTargetUrlInput');
+      const statusEl = document.getElementById('exportTargetUrlStatus');
+      const btn = document.getElementById('btnConnectTargetUrl');
+      const raw = (input.value || '').trim();
+
+      if (!raw) {
+        showToast(currentLanguage === 'es' ? 'Ingresa una URL o ID primero.' : 'Enter a URL or ID first.', 'warning');
+        return;
+      }
+
+      const parsed = parseGoogleFileUrl(raw);
+      if (!parsed) {
+        if (statusEl) { statusEl.style.display=''; statusEl.innerHTML='<span style="color:#dc2626;">❌ URL o ID no reconocido.</span>'; }
+        showToast(currentLanguage === 'es' ? 'URL o ID no válido.' : 'Invalid URL or ID.', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      if (statusEl) { statusEl.style.display=''; statusEl.innerHTML='<span style="color:#64748b;">⏳ Verificando conexión...</span>'; }
+
+      try {
+        await ensureAuthenticated();
+
+        // Try to fetch file metadata from Drive
+        const meta = await apiFetch('https://www.googleapis.com/drive/v3/files/' + parsed.id + '?fields=id,name,mimeType,webViewLink');
+        const isDoc = meta.mimeType === 'application/vnd.google-apps.document';
+        const isSheet = meta.mimeType === 'application/vnd.google-apps.spreadsheet';
+        const fileType = isDoc ? 'doc' : (isSheet ? 'sheet' : 'other');
+        const fileUrl = meta.webViewLink || (isDoc
+          ? 'https://docs.google.com/document/d/' + parsed.id + '/edit'
+          : 'https://docs.google.com/spreadsheets/d/' + parsed.id + '/edit');
+
+        // Register in connectedFiles if not already there
+        if (!connectedFiles.some(function(f) { return f.id === parsed.id; })) {
+          connectedFiles.unshift({ id: parsed.id, name: meta.name, type: fileType, url: fileUrl, modifiedTime: new Date().toISOString() });
+          saveConnectedFiles();
+        }
+
+        // Refresh dropdown and select this file
+        updateExportTargetDropdown();
+        const select = document.getElementById('exportTargetFile');
+        select.value = parsed.id;
+
+        // Status feedback
+        const typeLabel = isDoc ? '📘 Google Docs' : (isSheet ? '📗 Google Sheets' : '📄 Archivo');
+        if (statusEl) {
+          statusEl.style.display = '';
+          statusEl.innerHTML = '<span style="color:#107c41;">✅ Conectado: <strong>' + escapeHtml(meta.name) + '</strong> (' + typeLabel + ')</span>';
+        }
+        showToast('✅ ' + (currentLanguage === 'es' ? 'Archivo conectado: ' : 'File connected: ') + meta.name, 'success');
+
+      } catch(err) {
+        console.error(err);
+        if (statusEl) {
+          statusEl.style.display = '';
+          statusEl.innerHTML = '<span style="color:#dc2626;">❌ Error: ' + escapeHtml(err.message) + '</span>';
+        }
+        showToast((currentLanguage === 'es' ? 'No se pudo conectar: ' : 'Could not connect: ') + err.message, 'error');
+      } finally {
+        btn.disabled = false;
       }
     }
 
@@ -6011,6 +6099,9 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       if (wrapperExpParaOpts && isDocs) {
         wrapperExpParaOpts.style.display = currentDocStructure === 'paragraphs' ? 'flex' : 'none';
       }
+
+      // Refresh target dropdown to show relevant files for this format
+      updateExportTargetDropdown();
     }
 
     // Download data as Word (.doc) — uses HTML with MS-Word MIME type
@@ -6282,7 +6373,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
           }
 
         } else {
-          // Documento existente: leer y añadir texto con formato tabular
+          // Documento existente: re-crear el contenido con la misma lógica HTML que el modo nuevo
           progressText.textContent = currentLanguage === 'es' ? 'Conectando con documento existente...' : 'Connecting to existing document...';
           const targetInput = document.getElementById('exportTargetUrlInput').value.trim();
           const parsed = parseGoogleFileUrl(targetInput);
@@ -6292,72 +6383,93 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
           targetDocId = parsed.id;
           targetDocUrl = `https://docs.google.com/document/d/${targetDocId}/edit`;
 
-          const docData = await apiFetch(`https://docs.googleapis.com/v1/documents/${targetDocId}`);
-          const bodyContent = docData.body?.content || [];
-          const lastElem = bodyContent[bodyContent.length - 1];
-          const insertIdx = Math.max(1, (lastElem?.endIndex || 2) - 1);
-
-          let textToInsert = '';
-          if (effectiveIncTitle) {
-            textToInsert += `\n\n════════════════════════════════════════════════════════════════\n`;
-            textToInsert += `${docTitle}\n`;
-            textToInsert += `Exportado el: ${new Date().toLocaleString()} | Filas: ${sourceRows.length}\n`;
-            textToInsert += `════════════════════════════════════════════════════════════════\n\n`;
-          } else {
-            textToInsert += `\n\n`;
-          }
+          // Build the same HTML used for new docs (preserves table/paragraphs structure)
+          let existingHtml = '<!DOCTYPE html><html><head><meta charset="UTF-8">';
 
           if (structureMode === 'paragraphs') {
+            existingHtml += `<style>
+              body { font-family: ${fontFamily}, sans-serif; font-size: ${fontSize}pt; color: #1e293b; line-height: 1.5; }
+              h1 { color: #1a73e8; font-size: 18pt; margin-top: 0; margin-bottom: 6pt; font-weight: bold; }
+              .meta { color: #64748b; font-size: 9.5pt; margin-bottom: 16pt; border-bottom: 1pt solid #cbd5e1; padding-bottom: 8pt; }
+              .doc-record { ${effectiveSeparators ? 'margin-bottom: 16pt; padding-bottom: 12pt; border-bottom: 1pt solid #cbd5e1;' : 'margin-bottom: 4pt;'} }
+              h2.record-header { font-size: 12pt; color: #1a73e8; margin-top: 0; margin-bottom: 4pt; font-weight: bold; }
+              p.field-p { margin: 2pt 0; line-height: 1.45; }
+              strong.field-name { color: #334155; }
+            </style></head><body>`;
+
+            if (effectiveIncTitle) {
+              existingHtml += `<h1>${escapeHtml(docTitle)}</h1>`;
+              existingHtml += `<p class="meta">Exportado desde DataHub el ${new Date().toLocaleString()} &bull; Total de filas: ${sourceRows.length} &bull; Columnas: ${exportHeaders.length}</p>`;
+            }
             sourceRows.forEach((row, rIdx) => {
               const primaryVal = row[selectedColIndices[0]] ? String(row[selectedColIndices[0]]) : '';
+              existingHtml += '<div class="doc-record">';
               if (effectiveIncHeaders) {
-                textToInsert += `▶ Registro #${rIdx + 1}${primaryVal ? ' — ' + primaryVal : ''}\n`;
+                existingHtml += `<h2 class="record-header">Registro #${rIdx + 1}${primaryVal ? ' — ' + escapeHtml(primaryVal) : ''}</h2>`;
               }
               if (effectiveVertical) {
                 selectedColIndices.forEach((colIdx, i) => {
-                  const val = String(row[colIdx] ?? '');
-                  if (effectiveIncHeaders) {
-                    textToInsert += `  • ${exportHeaders[i]}: ${val}\n`;
-                  } else {
-                    textToInsert += `${val}\n`;
-                  }
+                  const val = escapeHtml(String(row[colIdx] ?? ''));
+                  existingHtml += effectiveIncHeaders
+                    ? `<p class="field-p"><strong class="field-name">${escapeHtml(exportHeaders[i])}:</strong> ${val}</p>`
+                    : `<p class="field-p">${val}</p>`;
                 });
               } else {
-                const line = selectedColIndices.map((colIdx, i) => {
-                  const val = String(row[colIdx] ?? '');
-                  return effectiveIncHeaders ? `${exportHeaders[i]}: ${val}` : val;
-                }).join('  |  ');
-                textToInsert += line + '\n';
+                existingHtml += '<p class="field-p">';
+                selectedColIndices.forEach((colIdx, i) => {
+                  const val = escapeHtml(String(row[colIdx] ?? ''));
+                  existingHtml += effectiveIncHeaders ? `<strong class="field-name">${escapeHtml(exportHeaders[i])}:</strong> ${val} &nbsp;&bull;&nbsp; ` : `${val} &nbsp;&bull;&nbsp; `;
+                });
+                existingHtml += '</p>';
               }
-              if (effectiveSeparators) {
-                textToInsert += `----------------------------------------------------\n`;
-              } else {
-                textToInsert += '\n';
-              }
+              existingHtml += '</div>';
             });
+            existingHtml += '</body></html>';
           } else {
-            if (effectiveIncHeaders) {
-              textToInsert += exportHeaders.join('  |  ') + '\n';
-              textToInsert += exportHeaders.map(() => '----------------').join('  |  ') + '\n';
+            // Table mode — same structure as new doc
+            existingHtml += `<style>
+              body { font-family: ${fontFamily}, sans-serif; font-size: ${fontSize}pt; color: #1e293b; line-height: 1.4; }
+              h1 { color: #1a73e8; font-size: 18pt; margin-top: 0; margin-bottom: 6pt; }
+              .meta { color: #64748b; font-size: 9.5pt; margin-bottom: 14pt; }
+              table { border-collapse: collapse; width: 100%; margin-top: 8pt; margin-bottom: 16pt; }
+              th { background-color: #1a73e8; color: #ffffff; font-weight: bold; padding: 7pt 8pt; text-align: left; border: 1px solid #1a73e8; font-size: ${Math.max(8, parseInt(fontSize, 10))}pt; word-wrap: break-word; }
+              td { padding: 6pt 8pt; border: 1px solid #cbd5e1; font-size: ${fontSize}pt; word-wrap: break-word; }
+              tr:nth-child(even) td { background-color: #f8fafc; }
+            </style></head><body>`;
+            if (effectiveIncTitle) {
+              existingHtml += `<h1>${escapeHtml(docTitle)}</h1>`;
+              existingHtml += `<p class="meta">Exportado desde DataHub el ${new Date().toLocaleString()} &bull; Total de filas: ${sourceRows.length} &bull; Columnas: ${exportHeaders.length}</p>`;
             }
+            existingHtml += '<table>';
+            if (effectiveIncHeaders) {
+              existingHtml += '<thead><tr>' + exportHeaders.map(h => `<th>${escapeHtml(h)}</th>`).join('') + '</tr></thead>';
+            }
+            existingHtml += '<tbody>';
             sourceRows.forEach(row => {
-              textToInsert += selectedColIndices.map(idx => String(row[idx] ?? '')).join('  |  ') + '\n';
+              existingHtml += '<tr>' + selectedColIndices.map(idx => `<td>${escapeHtml(String(row[idx] ?? ''))}</td>`).join('') + '</tr>';
             });
+            existingHtml += '</tbody></table></body></html>';
           }
 
-          await apiFetch(`https://docs.googleapis.com/v1/documents/${targetDocId}:batchUpdate`, {
-            method: 'POST',
-            body: JSON.stringify({
-              requests: [
-                {
-                  insertText: {
-                    location: { index: insertIdx },
-                    text: textToInsert
-                  }
-                }
-              ]
-            })
-          });
+          // Upload as new converted doc content using Drive import with updateContent
+          progressText.textContent = currentLanguage === 'es' ? 'Actualizando documento...' : 'Updating document...';
+
+          // Use Drive v3 media upload to update the document content
+          const updateRes = await fetch(
+            `https://www.googleapis.com/upload/drive/v3/files/${targetDocId}?uploadType=media&convert=true`,
+            {
+              method: 'PATCH',
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'text/html; charset=UTF-8'
+              },
+              body: existingHtml
+            }
+          );
+          if (!updateRes.ok) {
+            const errJson = await updateRes.json().catch(() => ({}));
+            throw new Error(errJson.error ? errJson.error.message : updateRes.statusText);
+          }
         }
 
         // Mostrar resultado
