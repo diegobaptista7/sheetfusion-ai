@@ -2016,7 +2016,10 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
               </div>
             </div>
 
-        <div class="card-footer">
+        <div class="card-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+          <div id="unionSelectionSummaryPill" style="font-size:0.8rem; color:#475569; display:flex; align-items:center; gap:0.4rem;">
+            <span>📋</span> <span id="unionSelectionSummaryText">Selecciona al menos 2 archivos para unir</span>
+          </div>
           <button class="btn btn-primary" id="btnExecuteUnion" onclick="executeUnionFiles()">
             <span>🔀</span> <span id="t_btnExecuteUnion">Unir Archivos Seleccionados</span>
           </button>
@@ -2565,9 +2568,25 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
 
             <!-- Right: Formatting Options -->
             <div>
-              <div style="background:var(--primary-light); border:1px solid var(--primary-border); border-radius:var(--radius-sm); padding:0.6rem 0.8rem; margin-bottom:1rem; font-size:0.82rem; color:var(--primary-hover);">
-                📋 <strong id="t_exportColsHint">Columnas a exportar:</strong> <span id="t_exportColsHintText">Configúralas en la pestaña <em>Filtros y Tabla</em>, sección "Columnas a exportar".</span>
-                <a class="filter-link" style="margin-left:0.5rem;" onclick="switchTab('tab-filters')" id="t_goToColsLink">Ir ahora →</a>
+              <div style="background:var(--primary-light); border:1px solid var(--primary-border); border-radius:var(--radius-sm); padding:0.65rem 0.85rem; margin-bottom:1rem; font-size:0.82rem; color:var(--primary-hover);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.4rem;">
+                  <div>
+                    📋 <strong id="t_exportColsHint">Columnas y Orden:</strong> <span id="t_exportColsHintText">Selecciona y numera columnas (1, 2, 3...).</span>
+                    <a class="filter-link" style="margin-left:0.4rem;" onclick="switchTab('tab-filters')" id="t_goToColsLink">Ver en Filtros →</a>
+                  </div>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="toggleExportColsQuickPreview()" id="btnToggleColsQuickOrder" style="font-size:0.75rem; padding:0.2rem 0.55rem; background:#ffffff; color:#1d4ed8; border:1px solid #bfdbfe; font-weight:600;">
+                    <span>⚙️ Ver / Ordenar aquí</span>
+                  </button>
+                </div>
+                <div id="exportColsQuickPreviewBox" class="hidden" style="margin-top:0.6rem; padding-top:0.6rem; border-top:1px dashed #bfdbfe;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem; font-size:0.76rem;">
+                    <span style="color:#1e40af; font-weight:600;">Reordenar columnas directamente para esta exportación:</span>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="resetExportColumnsOrder()" style="font-size:0.7rem; padding:0.15rem 0.45rem;">🔄 Restablecer</button>
+                  </div>
+                  <div id="exportColsChecklistExportTab" style="display:flex; flex-direction:column; gap:0.35rem; max-height:220px; overflow-y:auto; padding:0.2rem 0;">
+                    <!-- Synced dynamically -->
+                  </div>
+                </div>
               </div>
 
               <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem;" id="t_exportOptionsTitle">2. Opciones de formato:</h3>
@@ -4615,6 +4634,16 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         .map(id => connectedFiles.find(f => f.id === id))
         .filter(Boolean);
 
+      // Attach change listeners for live union summary
+      setTimeout(() => {
+        document.querySelectorAll('.union-file-checkbox').forEach(cb => {
+          cb.addEventListener('change', updateUnionSelectionSummary);
+        });
+        document.querySelectorAll('input[name="unionDocMode"]').forEach(r => {
+          r.addEventListener('change', updateUnionSelectionSummary);
+        });
+      }, 50);
+
       // Recordar selecciones previas
       const prevSelections = {};
       document.querySelectorAll('.union-sheet-tab-select').forEach(sel => {
@@ -4685,6 +4714,9 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         </div>
       `;
       }).join('');
+
+      // Actualizar resumen en vivo de archivos seleccionados
+      updateUnionSelectionSummary();
 
       // Cargar o renderizar pestañas para cada archivo de hoja
       container.querySelectorAll('.union-sheet-tab-select').forEach(sel => {
@@ -6354,6 +6386,10 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       }).join('');
 
       updateExportColumnsBadge();
+      const exportBox = document.getElementById('exportColsQuickPreviewBox');
+      if (exportBox && !exportBox.classList.contains('hidden')) {
+        renderExportColsInExportTab();
+      }
     }
 
     function selectAllExportCols(selectAll) {
@@ -6644,6 +6680,112 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         btn.disabled = false;
         progress.classList.add('hidden');
       }
+    }
+
+    // Actualizar indicador en vivo de selección en la pestaña Unión
+    function updateUnionSelectionSummary() {
+      const summaryText = document.getElementById('unionSelectionSummaryText');
+      if (!summaryText) return;
+
+      const checkedBoxes = Array.from(document.querySelectorAll('.union-file-checkbox:checked'));
+      const count = checkedBoxes.length;
+
+      if (count < 2) {
+        summaryText.innerHTML = count === 0
+          ? 'Selecciona al menos 2 archivos para unir'
+          : '1 archivo seleccionado (selecciona al menos 1 más)';
+        summaryText.style.color = '#64748b';
+        return;
+      }
+
+      // Ordered list of checked files
+      const orderedCheckedFiles = unionFilesOrder
+        .filter(id => checkedBoxes.some(cb => cb.getAttribute('data-file-id') === id))
+        .map(id => connectedFiles.find(f => f.id === id))
+        .filter(Boolean);
+
+      const sheetsCount = orderedCheckedFiles.filter(f => f.type === 'sheet').length;
+      const docsCount = orderedCheckedFiles.filter(f => f.type === 'doc').length;
+      const pdfCount = orderedCheckedFiles.filter(f => f.type === 'pdf').length;
+
+      const typesList = [];
+      if (sheetsCount > 0) typesList.push(`${sheetsCount} Sheets`);
+      if (docsCount > 0) typesList.push(`${docsCount} Docs`);
+      if (pdfCount > 0) typesList.push(`${pdfCount} PDF`);
+
+      const docModeRadio = document.querySelector('input[name="unionDocMode"]:checked');
+      const isContinuous = docModeRadio ? docModeRadio.value === 'continuous' : true;
+      const modeLabel = (docsCount > 0 || pdfCount > 0)
+        ? (isContinuous ? ' • Modo: 📄 Continuo' : ' • Modo: 📊 Tabular')
+        : '';
+
+      const namesSeq = orderedCheckedFiles.map((f, i) => `#${i+1} ${escapeHtml(f.name)}`).join(' ➔ ');
+      summaryText.innerHTML = `<strong style="color:#15803d;">${count} archivos listos</strong> (${typesList.join(', ')}${modeLabel}) <span style="font-size:0.75rem; color:#475569;" title="${namesSeq}">[${namesSeq}]</span>`;
+    }
+
+    // Toggle para ver/editar orden de columnas directamente en la pestaña Exportar
+    function toggleExportColsQuickPreview() {
+      const box = document.getElementById('exportColsQuickPreviewBox');
+      const btn = document.getElementById('btnToggleColsQuickOrder');
+      if (!box) return;
+
+      const isHidden = box.classList.contains('hidden');
+      if (isHidden) {
+        box.classList.remove('hidden');
+        if (btn) btn.innerHTML = '<span>✕ Cerrar vista</span>';
+        renderExportColsInExportTab();
+      } else {
+        box.classList.add('hidden');
+        if (btn) btn.innerHTML = '<span>⚙️ Ver / Ordenar aquí</span>';
+      }
+    }
+
+    function renderExportColsInExportTab() {
+      const container = document.getElementById('exportColsChecklistExportTab');
+      if (!container) return;
+
+      if (!currentDataset || currentDataset.headers.length === 0) {
+        container.innerHTML = '<span style="font-size:0.78rem; color:#64748b;">No hay datos cargados para exportar.</span>';
+        return;
+      }
+
+      // Sincronizar estado si cambiaron encabezados
+      const headerNames = currentDataset.headers;
+      const stateNames = exportColumnsOrderState.map(c => c.name);
+      if (exportColumnsOrderState.length !== headerNames.length || !headerNames.every((h, i) => stateNames.includes(h))) {
+        initExportColumnsOrderState();
+      }
+
+      const sorted = [...exportColumnsOrderState].sort((a, b) => {
+        const hasA = a.userOrder != null;
+        const hasB = b.userOrder != null;
+        if (hasA && hasB) return a.userOrder - b.userOrder;
+        if (hasA) return -1;
+        if (hasB) return 1;
+        return a.idx - b.idx;
+      });
+
+      const total = sorted.length;
+
+      container.innerHTML = sorted.map((col, posIdx) => {
+        const hasOrder = col.userOrder != null && col.userOrder > 0;
+        const orderVal = hasOrder ? col.userOrder : '';
+
+        return `
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:0.4rem; padding:0.3rem 0.5rem; background:${hasOrder ? '#f0f9ff' : '#ffffff'}; border:1px solid ${hasOrder ? '#93c5fd' : '#e2e8f0'}; border-radius:4px;">
+          <label class="form-check" style="margin:0; cursor:pointer; display:flex; align-items:center; gap:0.35rem; flex:1; min-width:0;">
+            <input type="checkbox" class="export-col-checkbox-exp" data-col-idx="${col.idx}" ${col.checked ? 'checked' : ''} onchange="handleExportColCheckChange(${col.idx}, this.checked); renderExportColsInExportTab();" />
+            <span style="font-weight:600; font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(col.name)}">${escapeHtml(col.name)}</span>
+          </label>
+          <div style="display:flex; align-items:center; gap:0.25rem; flex-shrink:0;">
+            <span style="font-size:0.7rem; color:${hasOrder ? '#2563eb' : '#94a3b8'}; font-weight:600;">${hasOrder ? `#${orderVal}` : 'Col:'}</span>
+            <input type="number" min="1" max="${total}" value="${orderVal}" placeholder="—" oninput="setExportColumnPosition(${col.idx}, this.value); renderExportColsInExportTab();" title="Opcional: escribe 1, 2, 3..." style="width:40px; height:22px; padding:0 2px; text-align:center; font-weight:bold; font-size:0.75rem; border:1px solid ${hasOrder ? '#2563eb' : '#cbd5e1'}; background:${hasOrder ? '#eff6ff' : '#ffffff'}; border-radius:4px;" />
+            <button type="button" class="btn btn-secondary btn-sm" onclick="moveExportColumn(${col.idx}, -1); renderExportColsInExportTab();" ${posIdx === 0 ? 'disabled' : ''} style="padding:0 4px; font-size:0.65rem; height:22px; line-height:1;">▲</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="moveExportColumn(${col.idx}, 1); renderExportColsInExportTab();" ${posIdx === total - 1 ? 'disabled' : ''} style="padding:0 4px; font-size:0.65rem; height:22px; line-height:1;">▼</button>
+          </div>
+        </div>
+      `;
+      }).join('');
     }
 
     function executeExportAction() {
@@ -8255,47 +8397,47 @@ REGLAS ABSOLUTAS:
         badge: 'Paso 1 de 7',
         tab: 'tab-connect',
         title: '¡Bienvenido a DataHub!',
-        desc: 'Tu plataforma inteligente todo-en-uno para Google Sheets, Google Docs y archivos locales. Cada persona que inicia sesión cuenta con un espacio personal 100% privado y protegido.',
+        desc: 'Tu suite inteligente todo-en-uno para conectar, transformar, unir y exportar entre Google Sheets, Google Docs, Word, Excel y PDF con total privacidad.',
         features: [
-          { bullet: '🔒', text: '<strong>Espacios Privados:</strong> Tu sesión con Google aísla tus archivos para que nadie más tenga acceso a ellos.' },
-          { bullet: '⚡', text: '<strong>Sin Pérdida de Datos:</strong> Tu sesión se mantiene abierta al recargar la página (F5) y se cierra automáticamente tras 1 hora de inactividad.' },
-          { bullet: '🚀', text: '<strong>IA Integrada:</strong> Modelos ultra veloces y de razonamiento (Groq, Gemini 2.5, OpenAI y Claude).' }
+          { bullet: '🔒', text: '<strong>Espacios 100% Privados:</strong> Tu sesión con Google OAuth aísla tus archivos de manera personal e impenetrable.' },
+          { bullet: '⚡', text: '<strong>Sin Pérdida de Datos:</strong> Tu sesión y archivos conectados se mantienen abiertos al recargar con F5.' },
+          { bullet: '🚀', text: '<strong>IA Integrada Multi-Modelo:</strong> Transforma tus datos a máxima velocidad con Groq, Gemini 2.5, OpenAI GPT-4 y Claude.' }
         ]
       },
       {
         icon: '📁',
         badge: 'Paso 2 de 7',
         tab: 'tab-connect',
-        title: 'Conexión y Gestión de Archivos',
-        desc: 'Conecta tus hojas de cálculo y documentos de Google Drive fácilmente desde este panel inicial.',
+        title: 'Conexión y Conversión de Archivos',
+        desc: 'Conecta tus fuentes de información locales y de la nube con un solo clic desde este panel inicial.',
         features: [
-          { bullet: '🔗', text: '<strong>Pegar Enlace o ID:</strong> Conecta directamente hojas de Google Sheets o Google Docs pegando su URL de Drive.' },
-          { bullet: '📂', text: '<strong>Arrastrar Archivos Locales:</strong> Sube archivos .xlsx, .docx o .pdf para convertirlos y conectarlos automáticamente.' },
-          { bullet: '🔍', text: '<strong>Explorador de Drive:</strong> Busca entre tus archivos de Google Drive con un solo clic.' }
+          { bullet: '🔗', text: '<strong>Conectar por URL o ID:</strong> Pega cualquier enlace de Google Sheets o Google Docs. El campo se conecta y se limpia automáticamente.' },
+          { bullet: '📂', text: '<strong>Conversor Local (.xlsx, .docx, .pdf):</strong> Arrastra archivos de Excel, Word o PDF para convertirlos y conectarlos de inmediato.' },
+          { bullet: '🔍', text: '<strong>Explorador de Google Drive:</strong> Busca y conecta archivos en tu almacenamiento en la nube sin salir de la app.' }
         ]
       },
       {
         icon: '📥',
         badge: 'Paso 3 de 7',
         tab: 'tab-extract',
-        title: 'Extracción Inteligente y Filtros',
-        desc: 'Carga los datos de cualquier archivo conectado y visualízalos en una tabla interactiva de alta velocidad.',
+        title: 'Extracción Inteligente de Datos',
+        desc: 'Carga los datos de cualquier archivo conectado y visualízalos al instante en una tabla de alto rendimiento.',
         features: [
-          { bullet: '📑', text: '<strong>Detección de Pestañas:</strong> Elige la pestaña exacta o el rango de celdas que necesitas procesar.' },
-          { bullet: '🎯', text: '<strong>Filtros por Columna:</strong> Agrega paneles de filtro dinámicos por cualquier columna para segmentar tu información al instante.' },
-          { bullet: '🔎', text: '<strong>Búsqueda y Paginación:</strong> Encuentra registros en milisegundos y navega miles de filas con fluidez.' }
+          { bullet: '📑', text: '<strong>Detección de Pestañas:</strong> Elige la pestaña exacta o el rango específico de celdas que necesitas procesar.' },
+          { bullet: '🎯', text: '<strong>Filtros Dinámicos por Columna:</strong> Segmenta tu información en tiempo real con paneles de filtro y búsqueda global instantánea.' },
+          { bullet: '⚡', text: '<strong>Paginación Fluida:</strong> Navega miles de filas sin lentitud con selector de filas por página.' }
         ]
       },
       {
-        icon: '🔗',
+        icon: '🔀',
         badge: 'Paso 4 de 7',
         tab: 'tab-union',
-        title: 'Unión Consolidada de Archivos',
-        desc: 'Combina múltiples archivos de Google Sheets o múltiples pestañas en una sola base de datos consolidada.',
+        title: 'Unión de Archivos: Orden y Modo Continuo',
+        desc: 'Combina múltiples archivos con control total sobre el orden y la estructura del resultado.',
         features: [
-          { bullet: '🔄', text: '<strong>Detección Automática:</strong> Detecta pestañas de todos tus archivos conectados con el botón "Detectar Pestañas de Todos".' },
-          { bullet: '📊', text: '<strong>Fusión Inteligente:</strong> Unifica filas con columnas coincidentes o añade etiquetas de origen a cada registro.' },
-          { bullet: '⚡', text: '<strong>Carga Directa:</strong> Envía la tabla consolidada directamente a la vista de filtros y al Asistente de IA.' }
+          { bullet: '🔢', text: '<strong>Orden Personalizado de Archivos:</strong> Usa los botones ▲ y ▼ o escribe el número de posición para definir exactamente qué archivo va primero, segundo o tercero.' },
+          { bullet: '📄', text: '<strong>Unión Continua de Documentos (Docs / Word / PDF):</strong> Mantiene intacto el formato original, párrafos y tablas completas de cada archivo, insertándolos secuencialmente uno debajo del otro.' },
+          { bullet: '📊', text: '<strong>Fusión Tabular Inteligente:</strong> Para hojas de cálculo, unifica filas alineando columnas coincidentes y agregando etiquetas del archivo de origen.' }
         ]
       },
       {
@@ -8306,32 +8448,32 @@ REGLAS ABSOLUTAS:
         desc: 'Aplica transformaciones avanzadas a tus tablas usando instrucciones en lenguaje natural en español.',
         features: [
           { bullet: '🧠', text: '<strong>Modelos Verificados:</strong> Soporte para GPT-OSS, Llama 3.3, Gemini 2.5 Flash/Pro, GPT-4.1 y Claude.' },
-          { bullet: '💬', text: '<strong>Instrucciones Fáciles:</strong> Escribe <em>"elimina duplicados"</em>, <em>"calcula el IVA"</em>, o <em>"ordena por ventas de mayor a menor"</em>.' },
-          { bullet: '↩️', text: '<strong>Deshacer / Rehacer:</strong> Cada transformación genera un punto de restauración seguro para revertir cuando quieras.' }
+          { bullet: '💬', text: '<strong>Instrucciones Fáciles:</strong> Escribe <em>"elimina duplicados"</em>, <em>"calcula el IVA 16%"</em> o <em>"ordena por fecha descendente"</em>.' },
+          { bullet: '↩️', text: '<strong>Puntos de Restauración:</strong> Cada transformación genera un respaldo seguro para deshacer (Undo) o rehacer (Redo) en cualquier momento.' }
         ]
       },
       {
-        icon: '🎛️',
+        icon: '📋',
         badge: 'Paso 6 de 7',
         tab: 'tab-filters',
-        title: 'Ajustes de Vista: Sheets vs Docs',
-        desc: 'En la sección de Filtros y Tabla puedes elegir el formato de destino de tus datos y personalizar la vista previa en tiempo real.',
+        title: 'Vistas (Sheets/Docs) y Orden de Columnas',
+        desc: 'Personaliza la vista de tus datos y define qué columna quieres que sea la 1, la 2, la 3...',
         features: [
-          { bullet: '📗', text: '<strong>Modo Google Sheets:</strong> Vista de cuadrícula clásica. Ajusta encabezados, congelado de fila, ancho automático y color de cabecera.' },
-          { bullet: '📘', text: '<strong>Modo Google Docs — Tabla:</strong> Vista de documento con tabla estilizada. Controla fuente, tamaño, títulos, fila de encabezados y filas alternadas.' },
-          { bullet: '📝', text: '<strong>Modo Google Docs — Párrafos / Fichas:</strong> Cada registro se presenta como ficha de texto. Activa disposición vertical, separación entre registros y decide si incluir los nombres de campos.' }
+          { bullet: '🔢', text: '<strong>Orden Personalizado de Columnas (1, 2, 3...):</strong> Asigna números opcionales a las columnas que quieras priorizar o usa ▲/▼ para moverlas. Las demás continúan en orden natural.' },
+          { bullet: '📘', text: '<strong>Modo Google Docs — Tabla vs Párrafos:</strong> Elige entre una tabla estilizada o fichas de texto con layout vertical y control de separadores.' },
+          { bullet: '📗', text: '<strong>Modo Google Sheets:</strong> Configura congelado de encabezados, autoajuste de ancho y color corporativo.' }
         ]
       },
       {
         icon: '📤',
         badge: 'Paso 7 de 7',
         tab: 'tab-export',
-        title: 'Exportación Flexible: Sheets, Docs y Descarga',
-        desc: 'Lleva tus datos procesados a donde los necesites. Elige el formato y el destino con total libertad.',
+        title: 'Exportación a Sheets, Docs, Word y Excel',
+        desc: 'Exporta a la nube o descarga localmente con total libertad de formatos y preservando tus estilos.',
         features: [
-          { bullet: '📗', text: '<strong>Exportar a Google Sheets:</strong> Crea una hoja nueva o actualiza una existente. Aplica estilos (color Google Blue, freeze, auto-resize).' },
-          { bullet: '📘', text: '<strong>Exportar a Google Docs:</strong> Genera un documento real en tu Drive, en formato Tabla o Párrafos / Fichas con opciones de layout vertical y separadores.' },
-          { bullet: '💾', text: '<strong>Descarga Local:</strong> Excel (.xlsx), Word (.doc), CSV delimitado o JSON estructurado. El botón Word aparece automáticamente al seleccionar modo Docs.' }
+          { bullet: '📗', text: '<strong>Google Sheets Inteligente:</strong> Crea una hoja nueva o escribe en una existente, con detección automática de pestañas para elegir una existente o crear una nueva al instante.' },
+          { bullet: '📘', text: '<strong>Google Docs & Word (.doc):</strong> Genera documentos en Drive o descarga archivos de Word con tablas centradas, ajuste de texto (word-wrap) o formato continuo.' },
+          { bullet: '💾', text: '<strong>Descarga Local Inmediata:</strong> Exporta a Excel (.xlsx), Word (.doc), CSV delimitado o copia directamente al portapapeles.' }
         ]
       }
     ];
@@ -8432,6 +8574,22 @@ REGLAS ABSOLUTAS:
       skipTour();
       showToast(currentLanguage === 'es' ? '¡Tour completado! Ya puedes comenzar a usar DataHub.' : 'Tour completed! Enjoy DataHub.', 'success');
     }
+
+    // Navegación por teclado para el tour
+    window.addEventListener('keydown', (e) => {
+      const overlay = document.getElementById('tourOverlay');
+      if (!overlay || !overlay.classList.contains('active')) return;
+      if (e.key === 'ArrowRight' || e.key === 'Enter') {
+        e.preventDefault();
+        nextTourStep();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prevTourStep();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        skipTour();
+      }
+    });
 
   </script>
 
