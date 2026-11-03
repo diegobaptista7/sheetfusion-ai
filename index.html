@@ -2072,11 +2072,8 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
           <button class="btn btn-secondary btn-sm" onclick="copyDataToClipboard()">
             📋 <span id="t_btnCopyData">Copiar al portapapeles</span>
           </button>
-          <button class="btn btn-primary btn-sm" onclick="goToExportFormat('sheets')" title="Exportar filas a Google Sheets" style="background:#107c41; border-color:#0b5c30;">
-            📗 <span id="t_btnGoToSheets">Exportar a Sheets</span>
-          </button>
-          <button class="btn btn-primary btn-sm" onclick="goToExportFormat('docs')" title="Exportar filas a Google Docs" style="background:#2563eb; border-color:#1d4ed8;">
-            📘 <span id="t_btnGoToDocs">Exportar a Docs</span>
+          <button class="btn btn-primary btn-sm" onclick="switchTab('tab-export')" title="Ir a la pestaña de exportación" style="background: linear-gradient(135deg,#107c41,#2563eb); border-color:#0b5c30;">
+            📤 <span id="t_btnGoToExportTab">Exportar datos</span>
           </button>
         </div>
       </div>
@@ -2513,8 +2510,8 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
               </div>
 
               <!-- Visual formatting panel for Sheets API batchUpdate -->
-              <div style="border-top: 1px solid var(--border); margin-top: 1rem; padding-top: 1rem;">
-                <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem;" id="t_exportFormatTitle">Formato de celdas:</h3>
+              <div id="groupSheetsFormatCells" style="border-top: 1px solid var(--border); margin-top: 1rem; padding-top: 1rem;">
+                <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem;" id="t_exportFormatTitle">Formato de celdas (Google Sheets):</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
                   
                   <!-- Font Family -->
@@ -2581,7 +2578,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
                         <span>📝 Formato Párrafos / Fichas de Texto</span>
                       </label>
                     </div>
-                    <div style="display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.5rem; padding-top: 0.4rem; border-top: 1px dashed #bfdbfe;">
+                    <div id="groupExpDocParaOpts" style="display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.5rem; padding-top: 0.4rem; border-top: 1px dashed #bfdbfe;">
                       <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
                         <input type="checkbox" id="chkExportDocVertical" checked onchange="handleDocVerticalLayoutToggle(this.checked)" />
                         <span>Pegar contenido en vertical (Nombre: ... / Edad: ...)</span>
@@ -2606,8 +2603,11 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
             <span class="spinner spinner-primary"></span>
             <span style="font-size: 0.85rem;" id="exportProgressText">Exportando datos a Google Sheets...</span>
           </div>
-          <button class="btn btn-secondary" id="btnDownloadExcel" onclick="downloadAsExcel()" style="margin-right: 0.5rem;">
+          <button class="btn btn-secondary" id="btnDownloadExcel" onclick="downloadAsExcel()" style="margin-right: 0.4rem;">
             📊 <span id="t_btnDownloadExcel">Descargar Excel (.xlsx)</span>
+          </button>
+          <button class="btn btn-secondary" id="btnDownloadWord" onclick="downloadAsWord()" style="margin-right: 0.4rem; background:#2563eb; border-color:#1d4ed8; color:#fff;">
+            📄 <span id="t_btnDownloadWord">Descargar Word (.doc)</span>
           </button>
           <button class="btn btn-success" id="btnExecuteExport" onclick="executeExportAction()">
             <span>🚀</span> <span id="t_btnExecuteExport">Exportar Ahora</span>
@@ -5295,6 +5295,20 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
 
       const docHeader = document.getElementById('docPreviewHeader');
       if (docHeader) docHeader.style.display = docIncludeTitle ? '' : 'none';
+
+      // Apply structure-based visibility on startup
+      const wrapperPara = document.getElementById('wrapperDocParagraphOptions');
+      const wrapperStriped = document.getElementById('wrapperDocStriped');
+      const wrapperExpParaOpts = document.getElementById('groupExpDocParaOpts');
+      if (currentDocStructure === 'paragraphs') {
+        if (wrapperPara) wrapperPara.style.display = 'flex';
+        if (wrapperStriped) wrapperStriped.style.display = 'none';
+        if (wrapperExpParaOpts) wrapperExpParaOpts.style.display = 'flex';
+      } else {
+        if (wrapperPara) wrapperPara.style.display = 'none';
+        if (wrapperStriped) wrapperStriped.style.display = '';
+        if (wrapperExpParaOpts) wrapperExpParaOpts.style.display = 'none';
+      }
     }
 
     let currentDocStructure = localStorage.getItem('datahub_doc_structure') || 'table';
@@ -5316,6 +5330,10 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       const lblExpPara = document.getElementById('lblExportDocStructureParagraphs');
       const structDesc = document.getElementById('docStructureDesc');
 
+      const wrapperPara = document.getElementById('wrapperDocParagraphOptions');
+      const wrapperStriped = document.getElementById('wrapperDocStriped');
+      const wrapperExpParaOpts = document.getElementById('groupExpDocParaOpts');
+
       if (type === 'paragraphs') {
         if (rPanelPara) rPanelPara.checked = true;
         if (rExpPara) rExpPara.checked = true;
@@ -5330,6 +5348,11 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         const paraContainer = document.getElementById('docsParagraphsContainer');
         if (tblContainer) tblContainer.classList.add('hidden');
         if (paraContainer) paraContainer.classList.remove('hidden');
+
+        // Show paragraph-only options, hide table-only options
+        if (wrapperPara) wrapperPara.style.display = 'flex';
+        if (wrapperStriped) wrapperStriped.style.display = 'none';
+        if (wrapperExpParaOpts) wrapperExpParaOpts.style.display = 'flex';
 
         if (structDesc) structDesc.textContent = currentLanguage === 'es'
           ? 'Cada fila se exportará como una ficha de texto con opciones de disposición vertical, separación y títulos.'
@@ -5348,6 +5371,11 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         const paraContainer = document.getElementById('docsParagraphsContainer');
         if (tblContainer) tblContainer.classList.remove('hidden');
         if (paraContainer) paraContainer.classList.add('hidden');
+
+        // Hide paragraph-only options, show table-only options
+        if (wrapperPara) wrapperPara.style.display = 'none';
+        if (wrapperStriped) wrapperStriped.style.display = '';
+        if (wrapperExpParaOpts) wrapperExpParaOpts.style.display = 'none';
 
         if (structDesc) structDesc.textContent = currentLanguage === 'es'
           ? 'La tabla se creará con cabecera en azul Google (#1a73e8), texto blanco en negrita, bordes finos y filas alternadas.'
@@ -5908,6 +5936,161 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       } else {
         executeExportToSheets();
       }
+    }
+
+    // Navigate to export tab and pre-select the format
+    function goToExportFormat(format = 'sheets') {
+      setAppExportFormat(format);
+      switchTab('tab-export');
+    }
+
+    // Update Export tab UI when Sheets vs Docs format changes
+    function handleExportFormatTypeChange(updateAppFormat = true) {
+      const format = document.querySelector('input[name="exportFormatType"]:checked')?.value || 'sheets';
+
+      if (updateAppFormat !== false) {
+        setAppExportFormat(format);
+        return; // setAppExportFormat calls this again with false
+      }
+
+      const isDocs = format === 'docs';
+
+      // Update destination text labels
+      const labelNew = document.getElementById('t_exportNewSheet');
+      const labelExist = document.getElementById('t_exportExistingSheet');
+      const labelTargetFile = document.getElementById('t_exportTargetFileLabel');
+      const labelTabName = document.getElementById('t_exportTabNameLabel');
+
+      if (labelNew) labelNew.textContent = isDocs
+        ? 'Crear un nuevo documento en mi Google Drive'
+        : 'Crear una nueva hoja de cálculo en mi Google Drive';
+      if (labelExist) labelExist.textContent = isDocs
+        ? 'Escribir en un documento de Google Docs existente'
+        : 'Escribir en una hoja de cálculo existente';
+      if (labelTargetFile) labelTargetFile.textContent = isDocs
+        ? 'Documento Docs destino:' : 'Hoja de cálculo destino:';
+
+      // Show/hide tab name (sheets only)
+      const groupTabName = document.getElementById('groupExportTabName');
+      if (groupTabName) groupTabName.style.display = isDocs ? 'none' : '';
+
+      // Show/hide Sheets-only format cells section
+      const groupSheetsCells = document.getElementById('groupSheetsFormatCells');
+      if (groupSheetsCells) groupSheetsCells.style.display = isDocs ? 'none' : '';
+
+      // Show/hide format-specific option groups
+      const sheetsOnly = document.getElementById('groupSheetsOnlyFormat');
+      const docsOnly = document.getElementById('groupDocsOnlyFormat');
+      if (sheetsOnly) sheetsOnly.style.display = isDocs ? 'none' : '';
+      if (docsOnly) docsOnly.style.display = isDocs ? '' : 'none';
+
+      // Show/hide Word button (Docs mode) — Excel button always visible
+      const btnWord = document.getElementById('btnDownloadWord');
+      if (btnWord) btnWord.style.display = isDocs ? '' : 'none';
+
+      // Update format selector card borders in Export tab
+      const lblSheets = document.getElementById('lblFormatSheets');
+      const lblDocs = document.getElementById('lblFormatDocs');
+      if (lblSheets) {
+        lblSheets.style.border = isDocs ? '2px solid var(--border)' : '2px solid #107c41';
+        lblSheets.style.background = isDocs ? '#ffffff' : '#f0fdf4';
+      }
+      if (lblDocs) {
+        lblDocs.style.border = isDocs ? '2px solid #2563eb' : '2px solid var(--border)';
+        lblDocs.style.background = isDocs ? '#eff6ff' : '#ffffff';
+      }
+
+      // Update export progress text
+      const progressText = document.getElementById('exportProgressText');
+      if (progressText) progressText.textContent = isDocs
+        ? 'Exportando datos a Google Docs...'
+        : 'Exportando datos a Google Sheets...';
+
+      // Sync paragraph options visibility based on current doc structure
+      const wrapperExpParaOpts = document.getElementById('groupExpDocParaOpts');
+      if (wrapperExpParaOpts && isDocs) {
+        wrapperExpParaOpts.style.display = currentDocStructure === 'paragraphs' ? 'flex' : 'none';
+      }
+    }
+
+    // Download data as Word (.doc) — uses HTML with MS-Word MIME type
+    function downloadAsWord() {
+      if (!currentDataset || !currentDataset.rows || currentDataset.rows.length === 0) {
+        showToast(currentLanguage === 'es' ? 'No hay datos para descargar.' : 'No data to download.', 'warning');
+        return;
+      }
+      const selectedColCheckboxes = Array.from(document.querySelectorAll('.export-col-checkbox:checked'));
+      const colIndices = selectedColCheckboxes.length > 0
+        ? selectedColCheckboxes.map(cb => parseInt(cb.getAttribute('data-col-idx'), 10))
+        : currentDataset.headers.map(function(_, i) { return i; });
+      const exportHeaders = colIndices.map(function(i) { return currentDataset.headers[i]; });
+      const scope = (document.querySelector('input[name="exportRowsScope"]:checked') || {}).value || 'filtered';
+      const sourceRows = scope === 'filtered' ? filteredRows : currentDataset.rows;
+      const exportRows = sourceRows.map(function(r) {
+        return colIndices.map(function(i) { return r[i] != null ? r[i] : ''; });
+      });
+      const docTitle = ((document.getElementById('exportNewTitle') || {}).value || 'DataHub - Documento Exportado').trim();
+      const font = (document.getElementById('docFontSelect') || {}).value || 'Arial';
+      const fontSize = (document.getElementById('docFontSizeSelect') || {}).value || '10';
+      const incTitle = (document.getElementById('chkDocIncludeTitle') || {}).checked !== false;
+      const incHeaders = (document.getElementById('chkDocIncludeHeaders') || {}).checked !== false;
+      const structure = currentDocStructure || 'table';
+      const vertical = (document.getElementById('chkDocVerticalLayout') || {}).checked !== false;
+      const separators = (document.getElementById('chkDocRecordSeparators') || {}).checked !== false;
+      let bodyHtml = '';
+      if (structure === 'table') {
+        let theadRow = '';
+        if (incHeaders) {
+          theadRow = '<tr>' + exportHeaders.map(function(h) {
+            return '<th style="background:#1a73e8;color:#fff;padding:6px 10px;font-weight:bold;border:1px solid #ddd;">' + h + '</th>';
+          }).join('') + '</tr>';
+        }
+        let tbodyRows = exportRows.map(function(row, ri) {
+          var bg = ri % 2 === 1 ? '#f8fafc' : '#ffffff';
+          return '<tr>' + row.map(function(cell) {
+            return '<td style="padding:5px 10px;border:1px solid #ddd;background:' + bg + ';">' + cell + '</td>';
+          }).join('') + '</tr>';
+        }).join('');
+        bodyHtml = '<table style="border-collapse:collapse;width:100%;font-family:' + font + ';font-size:' + fontSize + 'pt;">' + theadRow + tbodyRows + '</table>';
+      } else {
+        bodyHtml = exportRows.map(function(row, ri) {
+          var content = '';
+          if (vertical) {
+            content = exportHeaders.map(function(h, i) {
+              var label = incHeaders ? '<strong>' + h + ':</strong> ' : '';
+              return '<p style="margin:2px 0;">' + label + row[i] + '</p>';
+            }).join('');
+          } else {
+            var pairs = exportHeaders.map(function(h, i) {
+              return incHeaders ? '<strong>' + h + ':</strong> ' + row[i] : row[i];
+            });
+            content = '<p style="margin:4px 0;">' + pairs.join(' | ') + '</p>';
+          }
+          var sep = (separators && ri < exportRows.length - 1)
+            ? '<hr style="border:none;border-top:1px solid #cbd5e1;margin:8px 0;">' : '';
+          return '<div style="margin-bottom:4px;font-family:' + font + ';font-size:' + fontSize + 'pt;">' + content + sep + '</div>';
+        }).join('');
+      }
+      var dateStr = new Date().toLocaleDateString('es-ES');
+      var titleBlock = incTitle
+        ? '<h1 style="font-family:' + font + ';font-size:' + (parseInt(fontSize)+4) + 'pt;color:#1a73e8;margin-bottom:4px;">' + docTitle + '</h1>' +
+          '<p style="font-family:' + font + ';font-size:' + fontSize + 'pt;color:#666;margin-bottom:12px;">Exportado desde DataHub &bull; ' + dateStr + ' &bull; ' + exportRows.length + ' filas &bull; ' + exportHeaders.length + ' columnas</p>'
+        : '';
+      var fullHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">' +
+        '<head><meta charset="utf-8"><title>' + docTitle + '</title>' +
+        '<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>90</w:Zoom><w:DoNotOptimizeForBrowser/></w:WordDocument></xml><![endif]-->' +
+        '<style>body{font-family:' + font + ';font-size:' + fontSize + 'pt;margin:1.5cm;}</style>' +
+        '</head><body>' + titleBlock + bodyHtml + '</body></html>';
+      var blob = new Blob(['﻿', fullHtml], { type: 'application/msword' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = (docTitle || 'DataHub-Exportacion') + '.doc';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast(currentLanguage === 'es' ? '\u2705 Archivo Word descargado correctamente.' : '\u2705 Word file downloaded.', 'success');
     }
 
     async function executeExportToDocs() {
@@ -7294,7 +7477,7 @@ REGLAS ABSOLUTAS:
     const TOUR_STEPS = [
       {
         icon: '✨',
-        badge: 'Paso 1 de 6',
+        badge: 'Paso 1 de 7',
         tab: 'tab-connect',
         title: '¡Bienvenido a DataHub!',
         desc: 'Tu plataforma inteligente todo-en-uno para Google Sheets, Google Docs y archivos locales. Cada persona que inicia sesión cuenta con un espacio personal 100% privado y protegido.',
@@ -7306,7 +7489,7 @@ REGLAS ABSOLUTAS:
       },
       {
         icon: '📁',
-        badge: 'Paso 2 de 6',
+        badge: 'Paso 2 de 7',
         tab: 'tab-connect',
         title: 'Conexión y Gestión de Archivos',
         desc: 'Conecta tus hojas de cálculo y documentos de Google Drive fácilmente desde este panel inicial.',
@@ -7318,7 +7501,7 @@ REGLAS ABSOLUTAS:
       },
       {
         icon: '📥',
-        badge: 'Paso 3 de 6',
+        badge: 'Paso 3 de 7',
         tab: 'tab-extract',
         title: 'Extracción Inteligente y Filtros',
         desc: 'Carga los datos de cualquier archivo conectado y visualízalos en una tabla interactiva de alta velocidad.',
@@ -7330,7 +7513,7 @@ REGLAS ABSOLUTAS:
       },
       {
         icon: '🔗',
-        badge: 'Paso 4 de 6',
+        badge: 'Paso 4 de 7',
         tab: 'tab-union',
         title: 'Unión Consolidada de Archivos',
         desc: 'Combina múltiples archivos de Google Sheets o múltiples pestañas en una sola base de datos consolidada.',
@@ -7342,7 +7525,7 @@ REGLAS ABSOLUTAS:
       },
       {
         icon: '🤖',
-        badge: 'Paso 5 de 6',
+        badge: 'Paso 5 de 7',
         tab: 'tab-extract',
         title: 'Asistente de Datos con IA',
         desc: 'Aplica transformaciones avanzadas a tus tablas usando instrucciones en lenguaje natural en español.',
@@ -7353,15 +7536,27 @@ REGLAS ABSOLUTAS:
         ]
       },
       {
-        icon: '📤',
-        badge: 'Paso 6 de 6',
-        tab: 'tab-export',
-        title: 'Exportación a Google Sheets y Archivos',
-        desc: 'Lleva tus datos procesados a donde los necesites con total libertad de formatos.',
+        icon: '🎛️',
+        badge: 'Paso 6 de 7',
+        tab: 'tab-filters',
+        title: 'Ajustes de Vista: Sheets vs Docs',
+        desc: 'En la sección de Filtros y Tabla puedes elegir el formato de destino de tus datos y personalizar la vista previa en tiempo real.',
         features: [
-          { bullet: '📈', text: '<strong>Nueva Hoja de Google Sheets:</strong> Crea una hoja limpia directamente en tu Google Drive.' },
-          { bullet: '📝', text: '<strong>Sobreescribir Hoja Existente:</strong> Actualiza una hoja de cálculo previa conservando su ID de archivo.' },
-          { bullet: '💾', text: '<strong>Descarga Local:</strong> Exporta a Excel (.xlsx), CSV delimitado o JSON estructurado.' }
+          { bullet: '📗', text: '<strong>Modo Google Sheets:</strong> Vista de cuadrícula clásica. Ajusta encabezados, congelado de fila, ancho automático y color de cabecera.' },
+          { bullet: '📘', text: '<strong>Modo Google Docs — Tabla:</strong> Vista de documento con tabla estilizada. Controla fuente, tamaño, títulos, fila de encabezados y filas alternadas.' },
+          { bullet: '📝', text: '<strong>Modo Google Docs — Párrafos / Fichas:</strong> Cada registro se presenta como ficha de texto. Activa disposición vertical, separación entre registros y decide si incluir los nombres de campos.' }
+        ]
+      },
+      {
+        icon: '📤',
+        badge: 'Paso 7 de 7',
+        tab: 'tab-export',
+        title: 'Exportación Flexible: Sheets, Docs y Descarga',
+        desc: 'Lleva tus datos procesados a donde los necesites. Elige el formato y el destino con total libertad.',
+        features: [
+          { bullet: '📗', text: '<strong>Exportar a Google Sheets:</strong> Crea una hoja nueva o actualiza una existente. Aplica estilos (color Google Blue, freeze, auto-resize).' },
+          { bullet: '📘', text: '<strong>Exportar a Google Docs:</strong> Genera un documento real en tu Drive, en formato Tabla o Párrafos / Fichas con opciones de layout vertical y separadores.' },
+          { bullet: '💾', text: '<strong>Descarga Local:</strong> Excel (.xlsx), Word (.doc), CSV delimitado o JSON estructurado. El botón Word aparece automáticamente al seleccionar modo Docs.' }
         ]
       }
     ];
