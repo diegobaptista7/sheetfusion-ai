@@ -2472,8 +2472,44 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
 
               <!-- Sheet Tab Name -->
               <div class="form-group" id="groupExportTabName">
-                <label class="form-label" for="exportTabName" id="t_exportTabNameLabel">Nombre de la pestaña / hoja:</label>
-                <input type="text" id="exportTabName" class="form-control" value="Datos_Exportados" />
+                <label class="form-label" id="t_exportTabNameLabel">Pestaña / Hoja de destino:</label>
+
+                <!-- Choice when target is an existing spreadsheet: select existing tab OR create new tab -->
+                <div id="wrapperExistingSheetTabChoice" class="hidden" style="margin-bottom: 0.6rem; background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.65rem 0.85rem;">
+                  <div style="display: flex; gap: 1rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+                    <label class="form-check" style="font-size: 0.82rem; font-weight: 600; cursor: pointer;">
+                      <input type="radio" name="exportSheetTabMode" value="existing" checked onchange="handleSheetTabModeChange()" />
+                      <span id="t_optSelectExistingTab">Elegir hoja existente</span>
+                    </label>
+                    <label class="form-check" style="font-size: 0.82rem; font-weight: 600; cursor: pointer;">
+                      <input type="radio" name="exportSheetTabMode" value="new" onchange="handleSheetTabModeChange()" />
+                      <span id="t_optCreateNewTab">➕ Crear nueva pestaña</span>
+                    </label>
+                  </div>
+
+                  <!-- Dropdown of existing tabs -->
+                  <div id="wrapperSelectExistingTab">
+                    <div style="display: flex; gap: 0.4rem; align-items: center;">
+                      <select id="selectExportExistingTab" class="form-control" style="font-size: 0.85rem;" onchange="handleExportExistingTabChange(this.value)">
+                        <option value="">-- Selecciona o conecta una hoja primero --</option>
+                      </select>
+                      <button class="btn btn-secondary btn-sm" type="button" onclick="refreshCurrentExportSheetTabs()" title="Recargar lista de pestañas de esta hoja" style="padding: 0.35rem 0.6rem;">
+                        🔄
+                      </button>
+                    </div>
+                    <small style="color: var(--text-secondary); font-size: 0.73rem; display: block; margin-top: 0.25rem;">
+                      Se escribirán los datos comenzando en la celda A1 de la pestaña seleccionada.
+                    </small>
+                  </div>
+                </div>
+
+                <!-- Input for Tab Name (used when creating a new spreadsheet, or when '➕ Crear nueva pestaña' is selected) -->
+                <div id="wrapperNewTabNameInput">
+                  <input type="text" id="exportTabName" class="form-control" value="Datos_Exportados" placeholder="Nombre de la pestaña (ej: Datos_Exportados)..." />
+                  <small id="hintNewTabName" style="color: var(--text-secondary); font-size: 0.73rem; display: block; margin-top: 0.25rem;">
+                    Nombre que tendrá la pestaña donde se guardarán los datos.
+                  </small>
+                </div>
               </div>
 
               <!-- Filtered vs All -->
@@ -3493,7 +3529,14 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
           scope: SCOPES,
           callback: async (tokenResponse) => {
             if (tokenResponse.error) {
-              showToast('Error OAuth: ' + tokenResponse.error, 'error');
+              isAuthPromptInProgress = false;
+              const err = new Error(tokenResponse.error_description || tokenResponse.error);
+              const cbs = pendingAuthCallbacks.slice();
+              pendingAuthCallbacks = [];
+              cbs.forEach(cb => {
+                try { cb(err); } catch(e) {}
+              });
+              showToast('Error OAuth: ' + (tokenResponse.error_description || tokenResponse.error), 'error');
               return;
             }
             accessToken = tokenResponse.access_token;
@@ -3667,20 +3710,39 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       }
 
       return new Promise((resolve, reject) => {
+        let finished = false;
+        const timer = setTimeout(() => {
+          if (!finished) {
+            finished = true;
+            isAuthPromptInProgress = false;
+            reject(new Error(currentLanguage === 'es'
+              ? 'Tiempo de espera de autenticación agotado. Por favor haz clic en "Iniciar sesión con Google" arriba.'
+              : 'Authentication timeout. Please click "Sign in with Google" above.'));
+          }
+        }, 15000);
+
         pendingAuthCallbacks.push((err, token) => {
-          if (err) reject(err);
-          else resolve(token || accessToken);
+          if (!finished) {
+            finished = true;
+            clearTimeout(timer);
+            if (err) reject(err);
+            else resolve(token || accessToken);
+          }
         });
 
         if (!isAuthPromptInProgress) {
           isAuthPromptInProgress = true;
           try {
-            tokenClient.requestAccessToken({ prompt: '' });
+            tokenClient.requestAccessToken({ prompt: accessToken ? '' : 'select_account' });
           } catch (e) {
-            isAuthPromptInProgress = false;
-            const cbs = pendingAuthCallbacks.slice();
-            pendingAuthCallbacks = [];
-            cbs.forEach(cb => cb(e));
+            if (!finished) {
+              finished = true;
+              clearTimeout(timer);
+              isAuthPromptInProgress = false;
+              const cbs = pendingAuthCallbacks.slice();
+              pendingAuthCallbacks = [];
+              cbs.forEach(cb => cb(e));
+            }
           }
         }
       });
@@ -5644,6 +5706,127 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         newTitleGrp.classList.add('hidden');
         existingGrp.classList.remove('hidden');
       }
+
+      updateSheetTabOptionsVisibility();
+    }
+
+    function updateSheetTabOptionsVisibility() {
+      const destMode = document.querySelector('input[name="exportDestination"]:checked')?.value || 'new';
+      const format = document.querySelector('input[name="exportFormatType"]:checked')?.value || 'sheets';
+      const wrapperChoice = document.getElementById('wrapperExistingSheetTabChoice');
+      const wrapperNewInput = document.getElementById('wrapperNewTabNameInput');
+      const label = document.getElementById('t_exportTabNameLabel');
+
+      if (format === 'docs') {
+        return; // Docs format does not use sheet tabs
+      }
+
+      if (destMode === 'existing') {
+        if (wrapperChoice) wrapperChoice.classList.remove('hidden');
+        if (label) label.textContent = currentLanguage === 'es' ? 'Pestaña / Hoja de destino:' : 'Target Sheet / Tab:';
+        handleSheetTabModeChange();
+
+        // If spreadsheet is already selected, load its tabs
+        const select = document.getElementById('exportTargetFile');
+        const input = document.getElementById('exportTargetUrlInput');
+        let targetId = select?.value;
+        if (!targetId && input?.value) {
+          const parsed = parseGoogleFileUrl(input.value);
+          if (parsed) targetId = parsed.id;
+        }
+        if (targetId) {
+          loadExportSheetTabs(targetId);
+        }
+      } else {
+        // New spreadsheet mode
+        if (wrapperChoice) wrapperChoice.classList.add('hidden');
+        if (wrapperNewInput) wrapperNewInput.style.display = '';
+        if (label) label.textContent = currentLanguage === 'es' ? 'Nombre de la pestaña inicial:' : 'Initial tab name:';
+        const input = document.getElementById('exportTabName');
+        if (input && !input.value) input.value = 'Datos_Exportados';
+      }
+    }
+
+    function handleSheetTabModeChange() {
+      const mode = document.querySelector('input[name="exportSheetTabMode"]:checked')?.value || 'existing';
+      const wrapperSelect = document.getElementById('wrapperSelectExistingTab');
+      const wrapperNew = document.getElementById('wrapperNewTabNameInput');
+      const input = document.getElementById('exportTabName');
+      const select = document.getElementById('selectExportExistingTab');
+
+      if (mode === 'existing') {
+        if (wrapperSelect) wrapperSelect.style.display = '';
+        if (wrapperNew) wrapperNew.style.display = 'none';
+        if (input && select && select.value) {
+          input.value = select.value;
+        }
+      } else {
+        // Mode 'new': create a new tab in this existing spreadsheet
+        if (wrapperSelect) wrapperSelect.style.display = 'none';
+        if (wrapperNew) wrapperNew.style.display = '';
+        if (input) {
+          if (!input.value || (select && input.value === select.value)) {
+            input.value = 'Nueva_Pestana';
+          }
+          input.focus();
+        }
+      }
+    }
+
+    function handleExportExistingTabChange(tabName) {
+      if (tabName) {
+        const input = document.getElementById('exportTabName');
+        if (input) input.value = tabName;
+      }
+    }
+
+    async function loadExportSheetTabs(spreadsheetId) {
+      if (!spreadsheetId) return [];
+      const selectTab = document.getElementById('selectExportExistingTab');
+      if (!selectTab) return [];
+
+      selectTab.innerHTML = `<option value="">⏳ ${currentLanguage === 'es' ? 'Detectando hojas...' : 'Detecting sheets...'}</option>`;
+      selectTab.disabled = true;
+
+      try {
+        const tabs = await fetchSheetTabs(spreadsheetId, true);
+        if (tabs && tabs.length > 0) {
+          selectTab.innerHTML = tabs.map(t => `<option value="${escapeHtml(t)}">📄 ${escapeHtml(t)}</option>`).join('');
+          selectTab.disabled = false;
+
+          const modeRadio = document.querySelector('input[name="exportSheetTabMode"]:checked');
+          if (!modeRadio || modeRadio.value === 'existing') {
+            const expTabInput = document.getElementById('exportTabName');
+            if (expTabInput) expTabInput.value = tabs[0];
+          }
+          return tabs;
+        } else {
+          selectTab.innerHTML = `<option value="Hoja 1">📄 Hoja 1</option>`;
+          selectTab.disabled = false;
+          return ['Hoja 1'];
+        }
+      } catch (err) {
+        console.warn('Error fetching tabs for export target:', err);
+        selectTab.innerHTML = `<option value="">⚠️ ${currentLanguage === 'es' ? 'Error al leer hojas' : 'Error reading sheets'}</option>`;
+        selectTab.disabled = false;
+        return [];
+      }
+    }
+
+    async function refreshCurrentExportSheetTabs() {
+      const select = document.getElementById('exportTargetFile');
+      const input = document.getElementById('exportTargetUrlInput');
+      let targetId = select?.value;
+      if (!targetId && input?.value) {
+        const parsed = parseGoogleFileUrl(input.value);
+        if (parsed) targetId = parsed.id;
+      }
+      if (!targetId) {
+        showToast(currentLanguage === 'es' ? 'Selecciona o conecta una hoja de cálculo primero.' : 'Select or connect a spreadsheet first.', 'warning');
+        return;
+      }
+      const tabs = await loadExportSheetTabs(targetId);
+      showToast(currentLanguage === 'es' ? `Se detectaron ${tabs.length} pestañas.` : `Found ${tabs.length} sheets.`, 'info');
     }
 
     function updateExportTargetDropdown() {
@@ -5664,18 +5847,25 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         targetFiles.map(f => `<option value="${f.id}" data-type="${f.type}" data-url="${escapeHtml(f.url || '')}">${f.type === 'doc' ? '📘 ' : '📗 '}${escapeHtml(f.name)}</option>`).join('');
     }
 
-    function handleExportTargetFileChange() {
+    async function handleExportTargetFileChange() {
       const select = document.getElementById('exportTargetFile');
-      if (select.value) {
+      if (select && select.value) {
         const opt = select.options[select.selectedIndex];
         const fileUrl = opt.getAttribute('data-url');
-        // Fill URL input with full URL if available, otherwise use the ID
+        const fileType = opt.getAttribute('data-type');
         document.getElementById('exportTargetUrlInput').value = fileUrl || select.value;
-        // Show connected status
+
         const statusEl = document.getElementById('exportTargetUrlStatus');
         if (statusEl) {
           statusEl.style.display = '';
-          statusEl.innerHTML = '<span style="color:#107c41;">✅ Archivo seleccionado: <strong>' + escapeHtml(opt.textContent.trim()) + '</strong></span>';
+          const typeLabel = fileType === 'doc' ? '📘 Google Docs' : '📗 Google Sheets';
+          statusEl.innerHTML = '<span style="color:#107c41; font-weight:600;">✅ Archivo seleccionado:</span> <strong>' + escapeHtml(opt.textContent.trim()) + '</strong> <span style="color:#64748b;">(' + typeLabel + ')</span>';
+        }
+
+        // If Sheets format, load its tabs into the dropdown
+        const format = document.querySelector('input[name="exportFormatType"]:checked')?.value || 'sheets';
+        if (format === 'sheets' && fileType !== 'doc') {
+          await loadExportSheetTabs(select.value);
         }
       }
     }
@@ -5694,42 +5884,63 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
 
       const parsed = parseGoogleFileUrl(raw);
       if (!parsed) {
-        if (statusEl) { statusEl.style.display=''; statusEl.innerHTML='<span style="color:#dc2626;">❌ URL o ID no reconocido.</span>'; }
+        if (statusEl) {
+          statusEl.style.display = '';
+          statusEl.innerHTML = '<span style="color:#dc2626;">❌ URL o ID no reconocido. Pega el enlace completo de Google Sheets o Docs.</span>';
+        }
         showToast(currentLanguage === 'es' ? 'URL o ID no válido.' : 'Invalid URL or ID.', 'error');
         return;
       }
 
       btn.disabled = true;
-      if (statusEl) { statusEl.style.display=''; statusEl.innerHTML='<span style="color:#64748b;">⏳ Verificando conexión...</span>'; }
+      if (statusEl) {
+        statusEl.style.display = '';
+        statusEl.innerHTML = '<span style="color:#64748b;">⏳ Verificando archivo y permisos en Google Drive...</span>';
+      }
 
       try {
         await ensureAuthenticated();
 
-        // Try to fetch file metadata from Drive
+        // Fetch file metadata from Drive
         const meta = await apiFetch('https://www.googleapis.com/drive/v3/files/' + parsed.id + '?fields=id,name,mimeType,webViewLink');
         const isDoc = meta.mimeType === 'application/vnd.google-apps.document';
         const isSheet = meta.mimeType === 'application/vnd.google-apps.spreadsheet';
-        const fileType = isDoc ? 'doc' : (isSheet ? 'sheet' : 'other');
+        const fileType = isDoc ? 'doc' : (isSheet ? 'sheet' : (parsed.type !== 'unknown' ? parsed.type : 'sheet'));
         const fileUrl = meta.webViewLink || (isDoc
           ? 'https://docs.google.com/document/d/' + parsed.id + '/edit'
           : 'https://docs.google.com/spreadsheets/d/' + parsed.id + '/edit');
 
         // Register in connectedFiles if not already there
-        if (!connectedFiles.some(function(f) { return f.id === parsed.id; })) {
-          connectedFiles.unshift({ id: parsed.id, name: meta.name, type: fileType, url: fileUrl, modifiedTime: new Date().toISOString() });
-          saveConnectedFiles();
+        const existingIdx = connectedFiles.findIndex(f => f.id === parsed.id);
+        const fileObj = { id: parsed.id, name: meta.name, type: fileType, url: fileUrl, modifiedTime: new Date().toISOString() };
+        if (existingIdx >= 0) {
+          connectedFiles[existingIdx] = fileObj;
+        } else {
+          connectedFiles.unshift(fileObj);
         }
+        saveConnectedFiles();
 
-        // Refresh dropdown and select this file
+        // Refresh dropdowns and select this file
         updateExportTargetDropdown();
         const select = document.getElementById('exportTargetFile');
-        select.value = parsed.id;
+        if (select) select.value = parsed.id;
+
+        // If Sheets format, automatically load tabs!
+        let tabsInfo = '';
+        if (fileType === 'sheet') {
+          try {
+            const tabs = await loadExportSheetTabs(parsed.id);
+            tabsInfo = ' &bull; ' + tabs.length + (tabs.length === 1 ? ' pestaña detectada' : ' pestañas detectadas');
+          } catch(e) {
+            console.warn('Tab load error:', e);
+          }
+        }
 
         // Status feedback
         const typeLabel = isDoc ? '📘 Google Docs' : (isSheet ? '📗 Google Sheets' : '📄 Archivo');
         if (statusEl) {
           statusEl.style.display = '';
-          statusEl.innerHTML = '<span style="color:#107c41;">✅ Conectado: <strong>' + escapeHtml(meta.name) + '</strong> (' + typeLabel + ')</span>';
+          statusEl.innerHTML = '<span style="color:#107c41; font-weight:600;">✅ Conectado con éxito:</span> <strong>' + escapeHtml(meta.name) + '</strong> <span style="color:#64748b;">(' + typeLabel + tabsInfo + ')</span>';
         }
         showToast('✅ ' + (currentLanguage === 'es' ? 'Archivo conectado: ' : 'File connected: ') + meta.name, 'success');
 
@@ -5737,7 +5948,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         console.error(err);
         if (statusEl) {
           statusEl.style.display = '';
-          statusEl.innerHTML = '<span style="color:#dc2626;">❌ Error: ' + escapeHtml(err.message) + '</span>';
+          statusEl.innerHTML = '<span style="color:#dc2626;">❌ Error al conectar: ' + escapeHtml(err.message) + '</span>';
         }
         showToast((currentLanguage === 'es' ? 'No se pudo conectar: ' : 'Could not connect: ') + err.message, 'error');
       } finally {
@@ -5811,7 +6022,21 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
           ? document.getElementById('chkSheetsIncludeTitleRow').checked
           : (document.getElementById('checkExportIncludeTitleRow')?.checked ?? false);
         const applyStyles = document.getElementById('checkExportApplyStyles').checked;
-        const sheetTabName = document.getElementById('exportTabName').value.trim() || 'Datos';
+
+        // Determine target sheet/tab name: existing tab vs custom new tab
+        let sheetTabName = 'Datos';
+        if (destMode === 'existing') {
+          const tabChoiceMode = document.querySelector('input[name="exportSheetTabMode"]:checked')?.value || 'existing';
+          if (tabChoiceMode === 'existing') {
+            sheetTabName = document.getElementById('selectExportExistingTab')?.value?.trim()
+              || document.getElementById('exportTabName')?.value?.trim()
+              || 'Datos';
+          } else {
+            sheetTabName = document.getElementById('exportTabName')?.value?.trim() || 'Datos_Exportados';
+          }
+        } else {
+          sheetTabName = document.getElementById('exportTabName')?.value?.trim() || 'Datos_Exportados';
+        }
 
         const sourceRows = (scope === 'filtered') ? filteredRows : currentDataset.rows;
         const selectedColIndices = selectedColCheckboxes.map(cb => parseInt(cb.getAttribute('data-col-idx'), 10));
@@ -6102,6 +6327,9 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
 
       // Refresh target dropdown to show relevant files for this format
       updateExportTargetDropdown();
+
+      // Sync sheet tab options visibility
+      updateSheetTabOptionsVisibility();
     }
 
     // Download data as Word (.doc) — uses HTML with MS-Word MIME type
