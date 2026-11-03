@@ -4938,14 +4938,15 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         const isAllDocs = orderedCheckedFiles.every(f => f.type === 'doc' || f.type === 'pdf');
 
         const extractedList = [];
+        let mergedHeaders = [];
+        let mergedRows = [];
 
         if (hasDocFiles && isContinuousDocMode) {
           // ==============================================================
           // CONTINUOUS DOCUMENT UNION: Preserves exact original formatting
           // ==============================================================
           let allDocSections = [];
-          const mergedRows = [];
-          const mergedHeaders = [sourceColName, currentLanguage === 'es' ? 'Sección' : 'Section', currentLanguage === 'es' ? 'Contenido' : 'Content'];
+          mergedHeaders = [sourceColName, currentLanguage === 'es' ? 'Sección' : 'Section', currentLanguage === 'es' ? 'Contenido' : 'Content'];
 
           for (let i = 0; i < orderedCheckedFiles.length; i++) {
             const file = orderedCheckedFiles[i];
@@ -5009,8 +5010,8 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
             extractedList.push({ file, data });
           }
 
-          const mergedHeaders = Array.from(allHeadersSet);
-          const mergedRows = [];
+          mergedHeaders = Array.from(allHeadersSet);
+          mergedRows = [];
 
           for (const item of extractedList) {
             const headerIndexMap = {};
@@ -6107,7 +6108,6 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         const opt = select.options[select.selectedIndex];
         const fileUrl = opt.getAttribute('data-url');
         const fileType = opt.getAttribute('data-type');
-        document.getElementById('exportTargetUrlInput').value = fileUrl || select.value;
 
         const statusEl = document.getElementById('exportTargetUrlStatus');
         if (statusEl) {
@@ -6179,6 +6179,9 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         const select = document.getElementById('exportTargetFile');
         if (select) select.value = parsed.id;
 
+        // Clear the URL input once connected as requested
+        input.value = '';
+
         // If Sheets format, automatically load tabs!
         let tabsInfo = '';
         if (fileType === 'sheet') {
@@ -6215,7 +6218,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       document.getElementById('exportAllCount').textContent = currentDataset.rows.length;
     }
 
-    // Export columns custom order state: [{ idx: 0, name: 'Col', order: 1, checked: true }]
+    // Export columns custom order state: [{ idx: 0, name: 'Col', userOrder: null, checked: true }]
     let exportColumnsOrderState = [];
 
     function initExportColumnsOrderState() {
@@ -6226,43 +6229,50 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       exportColumnsOrderState = currentDataset.headers.map((h, idx) => ({
         idx: idx,
         name: h,
-        order: idx + 1,
+        userOrder: null, // Inicia en blanco: la numeración es 100% opcional
         checked: true
       }));
     }
 
     function setExportColumnPosition(colIdx, newPos) {
-      const pos = parseInt(newPos, 10);
-      if (isNaN(pos) || pos < 1 || pos > exportColumnsOrderState.length) return;
       const item = exportColumnsOrderState.find(c => c.idx === colIdx);
       if (!item) return;
 
-      // Sort current items by order
-      exportColumnsOrderState.sort((a, b) => a.order - b.order);
-      const currentPos = exportColumnsOrderState.findIndex(c => c.idx === colIdx);
-      if (currentPos === -1 || currentPos === pos - 1) return;
-
-      exportColumnsOrderState.splice(currentPos, 1);
-      exportColumnsOrderState.splice(pos - 1, 0, item);
-
-      // Re-assign 1..N order
-      exportColumnsOrderState.forEach((c, i) => { c.order = i + 1; });
-      updateExportColumnsChecklist();
+      const trimmed = String(newPos != null ? newPos : '').trim();
+      if (!trimmed) {
+        item.userOrder = null; // En blanco si se borra
+      } else {
+        const pos = parseInt(trimmed, 10);
+        item.userOrder = (!isNaN(pos) && pos > 0) ? pos : null;
+      }
+      updateExportColumnsBadge();
       renderMainTable();
     }
 
     function moveExportColumn(colIdx, direction) {
-      exportColumnsOrderState.sort((a, b) => a.order - b.order);
-      const currentPos = exportColumnsOrderState.findIndex(c => c.idx === colIdx);
+      // Si ninguna columna tiene número aún, asignar su orden natural 1..N para poder mover
+      const hasAny = exportColumnsOrderState.some(c => c.userOrder != null);
+      if (!hasAny) {
+        exportColumnsOrderState.forEach((c, i) => { c.userOrder = i + 1; });
+      }
+
+      // Ordenar por orden actual
+      const list = [...exportColumnsOrderState].sort((a, b) => {
+        const oA = a.userOrder != null ? a.userOrder : (999 + a.idx);
+        const oB = b.userOrder != null ? b.userOrder : (999 + b.idx);
+        return oA - oB;
+      });
+
+      const currentPos = list.findIndex(c => c.idx === colIdx);
       if (currentPos === -1) return;
       const targetPos = currentPos + direction;
-      if (targetPos < 0 || targetPos >= exportColumnsOrderState.length) return;
+      if (targetPos < 0 || targetPos >= list.length) return;
 
-      const temp = exportColumnsOrderState[currentPos];
-      exportColumnsOrderState[currentPos] = exportColumnsOrderState[targetPos];
-      exportColumnsOrderState[targetPos] = temp;
+      const temp = list[currentPos];
+      list[currentPos] = list[targetPos];
+      list[targetPos] = temp;
 
-      exportColumnsOrderState.forEach((c, i) => { c.order = i + 1; });
+      list.forEach((c, i) => { c.userOrder = i + 1; });
       updateExportColumnsChecklist();
       renderMainTable();
     }
@@ -6275,17 +6285,19 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
     }
 
     function resetExportColumnsOrder() {
-      initExportColumnsOrderState();
+      exportColumnsOrderState.forEach(c => { c.userOrder = null; });
       updateExportColumnsChecklist();
       renderMainTable();
-      showToast(currentLanguage === 'es' ? 'Orden de columnas restablecido.' : 'Column order reset.', 'info');
+      showToast(currentLanguage === 'es' ? 'Orden de columnas restablecido (en blanco).' : 'Column order reset.', 'info');
     }
 
     function updateExportColumnsBadge() {
       const badge = document.getElementById('badgeColsOrderCount');
       if (badge && exportColumnsOrderState.length > 0) {
         const checkedCount = exportColumnsOrderState.filter(c => c.checked).length;
-        badge.textContent = `${checkedCount} de ${exportColumnsOrderState.length} ${currentLanguage === 'es' ? 'seleccionadas' : 'selected'}`;
+        const customCount = exportColumnsOrderState.filter(c => c.userOrder != null).length;
+        const orderText = customCount > 0 ? ` (${customCount} con orden manual)` : '';
+        badge.textContent = `${checkedCount} de ${exportColumnsOrderState.length} ${currentLanguage === 'es' ? 'seleccionadas' : 'selected'}${orderText}`;
       }
     }
 
@@ -6300,34 +6312,46 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         return;
       }
 
-      // Initialize or sync state if length changed or headers changed
+      // Sincronizar estado si cambiaron encabezados
       const headerNames = currentDataset.headers;
       const stateNames = exportColumnsOrderState.map(c => c.name);
       if (exportColumnsOrderState.length !== headerNames.length || !headerNames.every((h, i) => stateNames.includes(h))) {
         initExportColumnsOrderState();
       }
 
-      // Show the card
       if (card) card.style.display = '';
 
-      // Sort items by current order
-      const sorted = [...exportColumnsOrderState].sort((a, b) => a.order - b.order);
+      // Mostrar las columnas: primero las numeradas por el usuario, luego las no numeradas en orden original
+      const sorted = [...exportColumnsOrderState].sort((a, b) => {
+        const hasA = a.userOrder != null;
+        const hasB = b.userOrder != null;
+        if (hasA && hasB) return a.userOrder - b.userOrder;
+        if (hasA) return -1;
+        if (hasB) return 1;
+        return a.idx - b.idx;
+      });
+
       const total = sorted.length;
 
-      container.innerHTML = sorted.map((col, posIdx) => `
-        <div class="export-col-row" style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem; padding:0.4rem 0.65rem; background:#ffffff; border:1px solid #e2e8f0; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
+      container.innerHTML = sorted.map((col, posIdx) => {
+        const hasOrder = col.userOrder != null && col.userOrder > 0;
+        const orderVal = hasOrder ? col.userOrder : '';
+
+        return `
+        <div class="export-col-row" style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem; padding:0.4rem 0.65rem; background:${hasOrder ? '#f0f9ff' : '#ffffff'}; border:1px solid ${hasOrder ? '#93c5fd' : '#e2e8f0'}; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
           <label class="form-check" style="margin:0; cursor:pointer; display:flex; align-items:center; gap:0.45rem; flex:1; min-width:0;">
             <input type="checkbox" class="export-col-checkbox" data-col-idx="${col.idx}" ${col.checked ? 'checked' : ''} onchange="handleExportColCheckChange(${col.idx}, this.checked)" />
             <span style="font-weight:600; font-size:0.83rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(col.name)}">${escapeHtml(col.name)}</span>
           </label>
-          <div style="display:flex; align-items:center; gap:0.3rem; flex-shrink:0;">
-            <span style="font-size:0.72rem; color:#64748b; font-weight:600;">Col:</span>
-            <input type="number" class="export-col-order-input" min="1" max="${total}" value="${col.order}" onchange="setExportColumnPosition(${col.idx}, this.value)" title="Escribe qué columna deseas que sea (1, 2, 3...)" style="width:44px; height:24px; padding:0 3px; text-align:center; font-weight:bold; font-size:0.8rem; border:1px solid #cbd5e1; border-radius:4px;" />
+          <div style="display:flex; align-items:center; gap:0.35rem; flex-shrink:0;">
+            <span style="font-size:0.72rem; color:${hasOrder ? '#2563eb' : '#94a3b8'}; font-weight:600;">${hasOrder ? `#${orderVal}` : 'Col:'}</span>
+            <input type="number" class="export-col-order-input" min="1" max="${total}" value="${orderVal}" placeholder="—" oninput="setExportColumnPosition(${col.idx}, this.value)" title="Opcional: escribe un número (1, 2, 3...) para posicionar esta columna" style="width:44px; height:24px; padding:0 3px; text-align:center; font-weight:bold; font-size:0.8rem; border:1px solid ${hasOrder ? '#2563eb' : '#cbd5e1'}; background:${hasOrder ? '#eff6ff' : '#ffffff'}; border-radius:4px;" />
             <button type="button" class="btn btn-secondary btn-sm" onclick="moveExportColumn(${col.idx}, -1)" ${posIdx === 0 ? 'disabled' : ''} title="Mover antes en la tabla" style="padding:1px 5px; font-size:0.7rem; height:24px; line-height:1.2;">▲</button>
             <button type="button" class="btn btn-secondary btn-sm" onclick="moveExportColumn(${col.idx}, 1)" ${posIdx === total - 1 ? 'disabled' : ''} title="Mover después en la tabla" style="padding:1px 5px; font-size:0.7rem; height:24px; line-height:1.2;">▼</button>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
 
       updateExportColumnsBadge();
     }
@@ -6341,7 +6365,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       renderMainTable();
     }
 
-    // Helper: returns the column indices sorted strictly by user order
+    // Helper: returns the column indices sorted by userOrder (if specified), followed by unnumbered columns
     function getOrderedExportColumnIndices() {
       if (!currentDataset || !currentDataset.headers || currentDataset.headers.length === 0) {
         return [];
@@ -6352,8 +6376,17 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       }
       const checked = exportColumnsOrderState.filter(c => c.checked);
       if (checked.length === 0) return [];
-      checked.sort((a, b) => a.order - b.order);
-      return checked.map(c => c.idx);
+
+      // Separar columnas con orden manual de las que no tienen
+      const numbered = checked.filter(c => c.userOrder != null && c.userOrder > 0);
+      const unnumbered = checked.filter(c => c.userOrder == null || c.userOrder <= 0);
+
+      // Las numeradas se ordenan por su número asignado (1, 2, 3...)
+      numbered.sort((a, b) => a.userOrder - b.userOrder);
+      // Las no numeradas mantienen su orden natural original
+      unnumbered.sort((a, b) => a.idx - b.idx);
+
+      return [...numbered, ...unnumbered].map(c => c.idx);
     }
 
     async function executeExportToSheets() {
@@ -6449,12 +6482,17 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
           targetSpreadsheetUrl = createRes.spreadsheetUrl;
         } else {
           // 2. Existing Spreadsheet
+          const targetFileSelect = document.getElementById('exportTargetFile');
           const targetInput = document.getElementById('exportTargetUrlInput').value.trim();
-          const parsed = parseGoogleFileUrl(targetInput);
-          if (!parsed) {
-            throw new Error(currentLanguage === 'es' ? 'URL o ID de la hoja destino inválido.' : 'Invalid target spreadsheet URL or ID.');
+          let targetFileId = targetFileSelect?.value || '';
+          if (targetInput) {
+            const parsed = parseGoogleFileUrl(targetInput);
+            if (parsed) targetFileId = parsed.id;
           }
-          targetSpreadsheetId = parsed.id;
+          if (!targetFileId) {
+            throw new Error(currentLanguage === 'es' ? 'Selecciona o ingresa una hoja de cálculo destino.' : 'Select or enter a target spreadsheet.');
+          }
+          targetSpreadsheetId = targetFileId;
           targetSpreadsheetUrl = `https://docs.google.com/spreadsheets/d/${targetSpreadsheetId}`;
 
           // Check if tab exists or create it
@@ -6996,12 +7034,17 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         } else {
           // Documento existente: re-crear el contenido con la misma lógica HTML que el modo nuevo
           progressText.textContent = currentLanguage === 'es' ? 'Conectando con documento existente...' : 'Connecting to existing document...';
+          const targetFileSelect = document.getElementById('exportTargetFile');
           const targetInput = document.getElementById('exportTargetUrlInput').value.trim();
-          const parsed = parseGoogleFileUrl(targetInput);
-          if (!parsed) {
-            throw new Error(currentLanguage === 'es' ? 'URL o ID del documento destino inválido.' : 'Invalid target document URL or ID.');
+          let targetFileId = targetFileSelect?.value || '';
+          if (targetInput) {
+            const parsed = parseGoogleFileUrl(targetInput);
+            if (parsed) targetFileId = parsed.id;
           }
-          targetDocId = parsed.id;
+          if (!targetFileId) {
+            throw new Error(currentLanguage === 'es' ? 'Selecciona o ingresa un documento Docs destino.' : 'Select or enter a target document.');
+          }
+          targetDocId = targetFileId;
           targetDocUrl = `https://docs.google.com/document/d/${targetDocId}/edit`;
 
           // Build the same HTML used for new docs (preserves table/paragraphs structure)
