@@ -1586,7 +1586,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       border: 1px solid #e2e8f0;
       border-left: 4px solid #2563eb;
       border-radius: 6px;
-      padding: 1.1rem 1.35rem;
+      padding: 1rem 1.25rem;
       margin-bottom: 0.85rem;
       box-shadow: 0 1px 3px rgba(0,0,0,0.04);
       transition: all 0.2s ease;
@@ -1598,13 +1598,52 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
     }
     .doc-paragraph-card .card-head {
       font-weight: 700;
-      font-size: 1rem;
+      font-size: 0.95rem;
       color: #1a73e8;
-      margin-bottom: 0.6rem;
+      margin-bottom: 0.5rem;
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
+    /* Modo continuo sin separaciones (todo junto) */
+    .doc-paragraph-card.no-separators {
+      background: transparent !important;
+      border: none !important;
+      border-left: none !important;
+      border-radius: 0 !important;
+      padding: 0.15rem 0 !important;
+      margin-bottom: 0.4rem !important;
+      box-shadow: none !important;
+    }
+    .doc-paragraph-card.no-separators:hover {
+      border: none !important;
+      box-shadow: none !important;
+    }
+    /* Disposición vertical de campos: un campo debajo de otro */
+    .doc-fields-vertical {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      font-size: 0.88rem;
+    }
+    .doc-field-line {
+      display: flex;
+      align-items: baseline;
+      gap: 0.4rem;
+      line-height: 1.45;
+    }
+    .doc-field-line .field-title {
+      font-weight: 700;
+      color: #334155;
+      font-size: 0.88rem;
+      flex-shrink: 0;
+    }
+    .doc-field-line .field-content {
+      color: #0f172a;
+      font-size: 0.88rem;
+      word-break: break-word;
+    }
+    /* Disposición cuadrícula existente */
     .doc-fields-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -2172,7 +2211,15 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
           </button>
         </div>
         <div class="card-body" style="padding: 0.75rem 1rem;">
-          <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center; font-size: 0.82rem;">
+          <div style="display: flex; gap: 1.25rem; flex-wrap: wrap; align-items: center; font-size: 0.82rem;">
+            <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+              <input type="checkbox" id="chkSheetsIncludeHeaders" checked onchange="handleSheetsHeadersToggle(this.checked)" />
+              <span style="font-weight: 600; color: #107c41;">Incluir fila de títulos / encabezados</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+              <input type="checkbox" id="chkSheetsIncludeTitleRow" onchange="handleSheetsTitleRowToggle(this.checked)" />
+              <span>Incluir bloque de título general arriba</span>
+            </label>
             <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
               <input type="checkbox" id="chkSheetsFreezeHeader" checked onchange="document.getElementById('checkExportFreezeHeader').checked = this.checked;" />
               <span>Congelar primera fila</span>
@@ -2209,7 +2256,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
           </button>
         </div>
         <div class="card-body" style="padding: 0.75rem 1rem;">
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; align-items: center; font-size: 0.82rem;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.85rem; align-items: start; font-size: 0.82rem;">
             <div>
               <label class="form-label" style="font-size: 0.78rem; margin-bottom: 0.25rem; font-weight: 600;">Estructura del contenido en Docs:</label>
               <div style="display: flex; gap: 0.5rem;">
@@ -2228,33 +2275,47 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
               <input type="text" id="docLiveTitleInput" class="form-control" value="DataHub - Documento Exportado" oninput="handleDocLiveTitleChange(this.value)" style="font-size: 0.82rem; padding: 0.3rem 0.6rem;" />
             </div>
             <div>
-              <label class="form-label" style="font-size: 0.78rem; margin-bottom: 0.25rem;">Tipografía del Documento:</label>
-              <select id="docFontSelect" class="form-control" style="font-size: 0.82rem; padding: 0.3rem 0.6rem;" onchange="handleDocFontChange(this.value)">
-                <option value="Arial" selected>Arial (Recomendado)</option>
-                <option value="Calibri">Calibri</option>
-                <option value="Roboto">Roboto</option>
-                <option value="Times New Roman">Times New Roman</option>
-                <option value="Verdana">Verdana</option>
-              </select>
+              <label class="form-label" style="font-size: 0.78rem; margin-bottom: 0.25rem;">Tipografía y Tamaño:</label>
+              <div style="display: flex; gap: 0.4rem;">
+                <select id="docFontSelect" class="form-control" style="font-size: 0.82rem; padding: 0.3rem 0.5rem;" onchange="handleDocFontChange(this.value)">
+                  <option value="Arial" selected>Arial</option>
+                  <option value="Calibri">Calibri</option>
+                  <option value="Roboto">Roboto</option>
+                  <option value="Times New Roman">Times New Roman</option>
+                  <option value="Verdana">Verdana</option>
+                </select>
+                <select id="docFontSizeSelect" class="form-control" style="font-size: 0.82rem; padding: 0.3rem 0.5rem; width: 85px;" onchange="handleDocFontSizeChange(this.value)">
+                  <option value="8">8 pt</option>
+                  <option value="9">9 pt</option>
+                  <option value="10" selected>10 pt</option>
+                  <option value="11">11 pt</option>
+                  <option value="12">12 pt</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label class="form-label" style="font-size: 0.78rem; margin-bottom: 0.25rem;">Tamaño de letra de tabla:</label>
-              <select id="docFontSizeSelect" class="form-control" style="font-size: 0.82rem; padding: 0.3rem 0.6rem;" onchange="handleDocFontSizeChange(this.value)">
-                <option value="8">8 pt (Compacto)</option>
-                <option value="9">9 pt</option>
-                <option value="10" selected>10 pt (Estándar)</option>
-                <option value="11">11 pt</option>
-                <option value="12">12 pt (Grande)</option>
-              </select>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 0.35rem; justify-content: center;">
+            <div style="display: flex; flex-direction: column; gap: 0.35rem;">
               <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
-                <input type="checkbox" id="chkDocIncludeMeta" checked onchange="handleDocMetaToggle(this.checked)" />
-                <span>Incluir cabecera con fecha y filas</span>
+                <input type="checkbox" id="chkDocIncludeTitle" checked onchange="handleDocTitleToggle(this.checked)" />
+                <span>Incluir título general del documento</span>
               </label>
               <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                <input type="checkbox" id="chkDocIncludeHeaders" checked onchange="handleDocHeadersToggle(this.checked)" />
+                <span title="Si se desmarca, se extrae solo el contenido sin títulos ni etiquetas" style="font-weight: 600; color: #2563eb;">Incluir títulos / nombres de campos</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;" id="wrapperDocStriped">
                 <input type="checkbox" id="chkDocStriped" checked onchange="handleDocStripedToggle(this.checked)" />
-                <span>Filas alternadas con fondo suave</span>
+                <span>Filas alternadas con fondo suave (en tabla)</span>
+              </label>
+            </div>
+            <div id="wrapperDocParagraphOptions" style="display: flex; flex-direction: column; gap: 0.35rem; background: #eff6ff; padding: 0.5rem 0.75rem; border-radius: 4px; border: 1px solid #bfdbfe;">
+              <div style="font-weight: 600; font-size: 0.76rem; color: #1e40af; margin-bottom: 0.15rem;">Configuración de Párrafos / Fichas:</div>
+              <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                <input type="checkbox" id="chkDocVerticalLayout" checked onchange="handleDocVerticalLayoutToggle(this.checked)" />
+                <span style="font-weight: 600;">Pegar en vertical (un campo por línea)</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                <input type="checkbox" id="chkDocRecordSeparators" checked onchange="handleDocRecordSeparatorsToggle(this.checked)" />
+                <span>Separar registros (desmarcar: todo continuo)</span>
               </label>
             </div>
           </div>
@@ -2438,11 +2499,11 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
               <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem;" id="t_exportOptionsTitle">2. Opciones de formato:</h3>
               <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                 <label class="form-check">
-                  <input type="checkbox" id="checkExportIncludeHeaders" checked />
+                  <input type="checkbox" id="checkExportIncludeHeaders" checked onchange="syncExportHeadersToPanels(this.checked)" />
                   <span id="t_optExportHeaders">Incluir fila de encabezados de columna</span>
                 </label>
                 <label class="form-check">
-                  <input type="checkbox" id="checkExportIncludeTitleRow" />
+                  <input type="checkbox" id="checkExportIncludeTitleRow" onchange="syncExportTitleToPanels(this.checked)" />
                   <span id="t_optExportTitleRow">Incluir bloque de título y fecha arriba</span>
                 </label>
                 <label class="form-check">
@@ -2510,7 +2571,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
                     <div style="font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
                       <span>📘</span> <span>Estructura de Exportación a Google Docs:</span>
                     </div>
-                    <div style="display: flex; gap: 0.75rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+                    <div style="display: flex; gap: 0.75rem; margin-bottom: 0.6rem; flex-wrap: wrap;">
                       <label id="lblExportDocStructureTable" style="display: flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.8rem; border: 2px solid #2563eb; background: #ffffff; color: #2563eb; border-radius: 4px; cursor: pointer; font-size: 0.82rem; font-weight: 600;">
                         <input type="radio" name="exportDocStructureType" value="table" checked onchange="setDocStructureType('table')" style="accent-color: #2563eb;" />
                         <span>📊 Formato Tabla (Matriz estructurada)</span>
@@ -2518,6 +2579,16 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
                       <label id="lblExportDocStructureParagraphs" style="display: flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.8rem; border: 2px solid var(--border); background: #ffffff; color: var(--text-secondary); border-radius: 4px; cursor: pointer; font-size: 0.82rem; font-weight: 600;">
                         <input type="radio" name="exportDocStructureType" value="paragraphs" onchange="setDocStructureType('paragraphs')" style="accent-color: #2563eb;" />
                         <span>📝 Formato Párrafos / Fichas de Texto</span>
+                      </label>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.5rem; padding-top: 0.4rem; border-top: 1px dashed #bfdbfe;">
+                      <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                        <input type="checkbox" id="chkExportDocVertical" checked onchange="handleDocVerticalLayoutToggle(this.checked)" />
+                        <span>Pegar contenido en vertical (Nombre: ... / Edad: ...)</span>
+                      </label>
+                      <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                        <input type="checkbox" id="chkExportDocSeparators" checked onchange="handleDocRecordSeparatorsToggle(this.checked)" />
+                        <span>Separar registros con división (desmarcar: todo continuo sin separaciones)</span>
                       </label>
                     </div>
                     <small style="color: #3b82f6; font-size: 0.75rem;" id="docStructureDesc">
@@ -3121,6 +3192,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       applyLanguageUI();
       setAppExportFormat(currentExportFormat);
       setDocStructureType(currentDocStructure);
+      initFormatOptions();
 
       // Protocolo file://
       if (window.location.protocol === 'file:') {
@@ -5102,10 +5174,8 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
     }
 
     function handleDocMetaToggle(checked) {
-      const header = document.getElementById('docPreviewHeader');
-      if (header) header.style.display = checked ? '' : 'none';
-      const chkTitle = document.getElementById('checkExportIncludeTitleRow');
-      if (chkTitle) chkTitle.checked = checked;
+      const meta = document.getElementById('docPreviewMeta');
+      if (meta) meta.style.display = checked ? '' : 'none';
     }
 
     function handleDocStripedToggle(checked) {
@@ -5119,7 +5189,114 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       }
     }
 
-    
+    // =========================================================================
+    // AJUSTES AVANZADOS PARA DOCS Y SHEETS (TÍTULOS, VERTICAL, SEPARACIONES)
+    // =========================================================================
+    let docIncludeHeaders = localStorage.getItem('datahub_doc_inc_headers') !== 'false';
+    let docIncludeTitle = localStorage.getItem('datahub_doc_inc_title') !== 'false';
+    let docVerticalLayout = localStorage.getItem('datahub_doc_vertical') !== 'false';
+    let docRecordSeparators = localStorage.getItem('datahub_doc_separators') !== 'false';
+    let sheetsIncludeHeaders = localStorage.getItem('datahub_sheets_inc_headers') !== 'false';
+
+    function handleSheetsHeadersToggle(checked) {
+      sheetsIncludeHeaders = checked;
+      localStorage.setItem('datahub_sheets_inc_headers', checked ? 'true' : 'false');
+      const chkExp = document.getElementById('checkExportIncludeHeaders');
+      if (chkExp) chkExp.checked = checked;
+      renderMainTable();
+    }
+
+    function handleSheetsTitleRowToggle(checked) {
+      const chkExp = document.getElementById('checkExportIncludeTitleRow');
+      if (chkExp) chkExp.checked = checked;
+    }
+
+    function handleDocTitleToggle(checked) {
+      docIncludeTitle = checked;
+      localStorage.setItem('datahub_doc_inc_title', checked ? 'true' : 'false');
+      const header = document.getElementById('docPreviewHeader');
+      if (header) header.style.display = checked ? '' : 'none';
+      const chkExportTitle = document.getElementById('checkExportIncludeTitleRow');
+      if (chkExportTitle) chkExportTitle.checked = checked;
+    }
+
+    function handleDocHeadersToggle(checked) {
+      docIncludeHeaders = checked;
+      localStorage.setItem('datahub_doc_inc_headers', checked ? 'true' : 'false');
+      const chkExport = document.getElementById('checkExportIncludeHeaders');
+      if (chkExport) chkExport.checked = checked;
+      renderMainTable();
+    }
+
+    function handleDocVerticalLayoutToggle(checked) {
+      docVerticalLayout = checked;
+      localStorage.setItem('datahub_doc_vertical', checked ? 'true' : 'false');
+      const chkDocV = document.getElementById('chkDocVerticalLayout');
+      const chkExpV = document.getElementById('chkExportDocVertical');
+      if (chkDocV) chkDocV.checked = checked;
+      if (chkExpV) chkExpV.checked = checked;
+      renderMainTable();
+    }
+
+    function handleDocRecordSeparatorsToggle(checked) {
+      docRecordSeparators = checked;
+      localStorage.setItem('datahub_doc_separators', checked ? 'true' : 'false');
+      const chkDocS = document.getElementById('chkDocRecordSeparators');
+      const chkExpS = document.getElementById('chkExportDocSeparators');
+      if (chkDocS) chkDocS.checked = checked;
+      if (chkExpS) chkExpS.checked = checked;
+      renderMainTable();
+    }
+
+    function syncExportHeadersToPanels(checked) {
+      sheetsIncludeHeaders = checked;
+      docIncludeHeaders = checked;
+      localStorage.setItem('datahub_sheets_inc_headers', checked ? 'true' : 'false');
+      localStorage.setItem('datahub_doc_inc_headers', checked ? 'true' : 'false');
+      const chkSheetsH = document.getElementById('chkSheetsIncludeHeaders');
+      const chkDocH = document.getElementById('chkDocIncludeHeaders');
+      if (chkSheetsH) chkSheetsH.checked = checked;
+      if (chkDocH) chkDocH.checked = checked;
+      renderMainTable();
+    }
+
+    function syncExportTitleToPanels(checked) {
+      docIncludeTitle = checked;
+      localStorage.setItem('datahub_doc_inc_title', checked ? 'true' : 'false');
+      const chkDocT = document.getElementById('chkDocIncludeTitle');
+      const chkSheetsT = document.getElementById('chkSheetsIncludeTitleRow');
+      if (chkDocT) chkDocT.checked = checked;
+      if (chkSheetsT) chkSheetsT.checked = checked;
+      const header = document.getElementById('docPreviewHeader');
+      if (header) header.style.display = checked ? '' : 'none';
+    }
+
+    function initFormatOptions() {
+      const chkDocT = document.getElementById('chkDocIncludeTitle');
+      const chkDocH = document.getElementById('chkDocIncludeHeaders');
+      const chkDocV = document.getElementById('chkDocVerticalLayout');
+      const chkDocS = document.getElementById('chkDocRecordSeparators');
+      const chkExpV = document.getElementById('chkExportDocVertical');
+      const chkExpS = document.getElementById('chkExportDocSeparators');
+      const chkExpH = document.getElementById('checkExportIncludeHeaders');
+      const chkExpT = document.getElementById('checkExportIncludeTitleRow');
+
+      if (chkDocT) chkDocT.checked = docIncludeTitle;
+      if (chkDocH) chkDocH.checked = docIncludeHeaders;
+      if (chkDocV) chkDocV.checked = docVerticalLayout;
+      if (chkDocS) chkDocS.checked = docRecordSeparators;
+      if (chkExpV) chkExpV.checked = docVerticalLayout;
+      if (chkExpS) chkExpS.checked = docRecordSeparators;
+
+      const chkSheetsH = document.getElementById('chkSheetsIncludeHeaders');
+      const chkSheetsT = document.getElementById('chkSheetsIncludeTitleRow');
+      if (chkSheetsH) chkSheetsH.checked = sheetsIncludeHeaders;
+      if (chkSheetsT && chkExpT) chkSheetsT.checked = chkExpT.checked;
+
+      const docHeader = document.getElementById('docPreviewHeader');
+      if (docHeader) docHeader.style.display = docIncludeTitle ? '' : 'none';
+    }
+
     let currentDocStructure = localStorage.getItem('datahub_doc_structure') || 'table';
 
     function setDocStructureType(type = 'table') {
@@ -5155,8 +5332,8 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         if (paraContainer) paraContainer.classList.remove('hidden');
 
         if (structDesc) structDesc.textContent = currentLanguage === 'es'
-          ? 'Cada fila se exportará como una ficha de texto con encabezados destacados y campos organizados en párrafos.'
-          : 'Each row will be exported as a formatted text card with bold headers and paragraph fields.';
+          ? 'Cada fila se exportará como una ficha de texto con opciones de disposición vertical, separación y títulos.'
+          : 'Each row will be exported as formatted text with vertical layout, separation, and header options.';
       } else {
         if (rPanelTable) rPanelTable.checked = true;
         if (rExpTable) rExpTable.checked = true;
@@ -5214,14 +5391,21 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         return;
       }
 
-      // Headers with sort indicators
-      thead.innerHTML = `<tr>` + currentDataset.headers.map(h => {
-        let sortClass = '';
-        if (currentSortColumn === h) {
-          sortClass = currentSortAsc ? 'sort-asc' : 'sort-desc';
-        }
-        return `<th class="${sortClass}" onclick="handleColumnSort('${escapeHtml(h)}')">${escapeHtml(h)}</th>`;
-      }).join('') + `</tr>`;
+      // Headers with sort indicators (respetando si se deseleccionan títulos en Sheets)
+      const chkSheetsH = document.getElementById('chkSheetsIncludeHeaders');
+      const showSheetsHeaders = chkSheetsH ? chkSheetsH.checked : sheetsIncludeHeaders;
+
+      if (!showSheetsHeaders) {
+        thead.innerHTML = '';
+      } else {
+        thead.innerHTML = `<tr>` + currentDataset.headers.map(h => {
+          let sortClass = '';
+          if (currentSortColumn === h) {
+            sortClass = currentSortAsc ? 'sort-asc' : 'sort-desc';
+          }
+          return `<th class="${sortClass}" onclick="handleColumnSort('${escapeHtml(h)}')">${escapeHtml(h)}</th>`;
+        }).join('') + `</tr>`;
+      }
 
       // Page slicing
       const startIdx = (currentPage - 1) * pageSize;
@@ -5237,13 +5421,22 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       const docsBody = document.getElementById('docsPreviewBody');
       const docTitleEl = document.getElementById('docPreviewTitle');
       const docMetaEl = document.getElementById('docPreviewMeta');
+      const docHeader = document.getElementById('docPreviewHeader');
       const liveTitle = document.getElementById('docLiveTitleInput')?.value || document.getElementById('exportNewTitle')?.value || 'DataHub - Documento Exportado';
 
       if (docTitleEl) docTitleEl.textContent = liveTitle;
       if (docMetaEl) docMetaEl.textContent = `${currentLanguage === 'es' ? 'Exportado desde DataHub' : 'Exported from DataHub'} • ${filteredRows.length} ${currentLanguage === 'es' ? 'filas' : 'rows'} • ${currentDataset.headers.length} ${currentLanguage === 'es' ? 'columnas' : 'columns'}`;
 
+      if (docHeader) {
+        docHeader.style.display = docIncludeTitle ? '' : 'none';
+      }
+
       if (docsHead && docsBody) {
-        docsHead.innerHTML = `<tr>` + currentDataset.headers.map(h => `<th>${escapeHtml(h)}</th>`).join('') + `</tr>`;
+        if (!docIncludeHeaders) {
+          docsHead.innerHTML = '';
+        } else {
+          docsHead.innerHTML = `<tr>` + currentDataset.headers.map(h => `<th>${escapeHtml(h)}</th>`).join('') + `</tr>`;
+        }
         docsBody.innerHTML = pageRows.map(row => `
           <tr>${row.map(cell => `<td>${escapeHtml(String(cell))}</td>`).join('')}</tr>
         `).join('');
@@ -5258,20 +5451,71 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
           paraList.innerHTML = pageRows.map((row, rIdx) => {
             const rowNumber = startIdx + rIdx + 1;
             const primaryVal = row[0] ? String(row[0]) : '';
-            return `
-              <div class="doc-paragraph-card">
+            const cardClass = docRecordSeparators ? 'doc-paragraph-card' : 'doc-paragraph-card no-separators';
+
+            let headHtml = '';
+            if (docIncludeHeaders) {
+              headHtml = `
                 <div class="card-head">
                   <span>📄</span>
                   <span>Registro #${rowNumber}${primaryVal ? ' — ' + escapeHtml(primaryVal) : ''}</span>
                 </div>
-                <div class="doc-fields-grid">
-                  ${currentDataset.headers.map((h, i) => `
-                    <div class="doc-field-item">
-                      <span class="doc-field-label">${escapeHtml(h)}</span>
-                      <span class="doc-field-value">${escapeHtml(String(row[i] ?? '')) || '<em style="color:#94a3b8; font-weight:normal;">(vacío)</em>'}</span>
-                    </div>
-                  `).join('')}
+              `;
+            }
+
+            let fieldsHtml = '';
+            if (docVerticalLayout) {
+              // Disposición vertical: un campo por línea
+              fieldsHtml = `
+                <div class="doc-fields-vertical">
+                  ${currentDataset.headers.map((h, i) => {
+                    const val = escapeHtml(String(row[i] ?? '')) || '<em style="color:#94a3b8; font-weight:normal;">(vacío)</em>';
+                    if (docIncludeHeaders) {
+                      return `
+                        <div class="doc-field-line">
+                          <span class="field-title">${escapeHtml(h)}:</span>
+                          <span class="field-content">${val}</span>
+                        </div>
+                      `;
+                    } else {
+                      return `
+                        <div class="doc-field-line">
+                          <span class="field-content">${val}</span>
+                        </div>
+                      `;
+                    }
+                  }).join('')}
                 </div>
+              `;
+            } else {
+              // Cuadrícula / En línea
+              fieldsHtml = `
+                <div class="doc-fields-grid">
+                  ${currentDataset.headers.map((h, i) => {
+                    const val = escapeHtml(String(row[i] ?? '')) || '<em style="color:#94a3b8; font-weight:normal;">(vacío)</em>';
+                    if (docIncludeHeaders) {
+                      return `
+                        <div class="doc-field-item">
+                          <span class="doc-field-label">${escapeHtml(h)}</span>
+                          <span class="doc-field-value">${val}</span>
+                        </div>
+                      `;
+                    } else {
+                      return `
+                        <div class="doc-field-item">
+                          <span class="doc-field-value">${val}</span>
+                        </div>
+                      `;
+                    }
+                  }).join('')}
+                </div>
+              `;
+            }
+
+            return `
+              <div class="${cardClass}">
+                ${headHtml}
+                ${fieldsHtml}
               </div>
             `;
           }).join('');
@@ -5444,8 +5688,12 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       try {
         const destMode = document.querySelector('input[name="exportDestination"]:checked').value;
         const scope = document.querySelector('input[name="exportRowsScope"]:checked').value;
-        const includeHeaders = document.getElementById('checkExportIncludeHeaders').checked;
-        const includeTitleRow = document.getElementById('checkExportIncludeTitleRow').checked;
+        const includeHeaders = document.getElementById('chkSheetsIncludeHeaders')
+          ? document.getElementById('chkSheetsIncludeHeaders').checked
+          : (document.getElementById('checkExportIncludeHeaders')?.checked ?? true);
+        const includeTitleRow = document.getElementById('chkSheetsIncludeTitleRow')
+          ? document.getElementById('chkSheetsIncludeTitleRow').checked
+          : (document.getElementById('checkExportIncludeTitleRow')?.checked ?? false);
         const applyStyles = document.getElementById('checkExportApplyStyles').checked;
         const sheetTabName = document.getElementById('exportTabName').value.trim() || 'Datos';
 
@@ -5702,6 +5950,12 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         const exportHeaders = selectedColIndices.map(idx => currentDataset.headers[idx]);
         const structureMode = currentDocStructure;
 
+        // Opciones avanzadas de títulos, vertical y separadores
+        const effectiveIncHeaders = docIncludeHeaders;
+        const effectiveIncTitle = docIncludeTitle;
+        const effectiveVertical = docVerticalLayout;
+        const effectiveSeparators = docRecordSeparators;
+
         let targetDocId = null;
         let targetDocUrl = null;
 
@@ -5713,17 +5967,16 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
 
           if (structureMode === 'paragraphs') {
             html += `<style>
-              body { font-family: ${fontFamily}, sans-serif; font-size: ${fontSize}pt; color: #1e293b; line-height: 1.6; }
+              body { font-family: ${fontFamily}, sans-serif; font-size: ${fontSize}pt; color: #1e293b; line-height: 1.5; }
               h1 { color: #1a73e8; font-size: 18pt; margin-top: 0; margin-bottom: 6pt; font-weight: bold; }
               .meta { color: #64748b; font-size: 9.5pt; margin-bottom: 16pt; border-bottom: 1pt solid #cbd5e1; padding-bottom: 8pt; }
-              .doc-record { margin-bottom: 18pt; padding-bottom: 14pt; border-bottom: 1pt solid #e2e8f0; }
-              h2.record-header { font-size: 12.5pt; color: #1a73e8; margin-top: 0; margin-bottom: 6pt; font-weight: bold; }
-              ul.record-fields { margin: 4pt 0 0 16pt; padding: 0; }
-              li.field-row { margin-bottom: 4pt; }
+              .doc-record { ${effectiveSeparators ? 'margin-bottom: 16pt; padding-bottom: 12pt; border-bottom: 1pt solid #cbd5e1;' : 'margin-bottom: 4pt;'} }
+              h2.record-header { font-size: 12pt; color: #1a73e8; margin-top: 0; margin-bottom: 4pt; font-weight: bold; }
+              p.field-p { margin: 2pt 0; line-height: 1.45; }
               strong.field-name { color: #334155; }
             </style></head><body>`;
 
-            if (includeTitleRow) {
+            if (effectiveIncTitle) {
               html += `<h1>${escapeHtml(docTitle)}</h1>`;
               html += `<p class="meta">Exportado desde DataHub el ${new Date().toLocaleString()} &bull; Total de filas: ${sourceRows.length} &bull; Columnas: ${exportHeaders.length}</p>`;
             }
@@ -5731,12 +5984,33 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
             sourceRows.forEach((row, rIdx) => {
               const primaryVal = row[selectedColIndices[0]] ? String(row[selectedColIndices[0]]) : '';
               html += `<div class="doc-record">`;
-              html += `<h2 class="record-header">Registro #${rIdx + 1}${primaryVal ? ' — ' + escapeHtml(primaryVal) : ''}</h2>`;
-              html += `<ul class="record-fields">`;
-              selectedColIndices.forEach((colIdx, i) => {
-                html += `<li class="field-row"><strong class="field-name">${escapeHtml(exportHeaders[i])}:</strong> ${escapeHtml(String(row[colIdx] ?? ''))}</li>`;
-              });
-              html += `</ul></div>`;
+              if (effectiveIncHeaders) {
+                html += `<h2 class="record-header">Registro #${rIdx + 1}${primaryVal ? ' — ' + escapeHtml(primaryVal) : ''}</h2>`;
+              }
+              if (effectiveVertical) {
+                // Vertical: un campo debajo de otro
+                selectedColIndices.forEach((colIdx, i) => {
+                  const val = escapeHtml(String(row[colIdx] ?? ''));
+                  if (effectiveIncHeaders) {
+                    html += `<p class="field-p"><strong class="field-name">${escapeHtml(exportHeaders[i])}:</strong> ${val}</p>`;
+                  } else {
+                    html += `<p class="field-p">${val}</p>`;
+                  }
+                });
+              } else {
+                // En línea
+                html += `<p class="field-p">`;
+                selectedColIndices.forEach((colIdx, i) => {
+                  const val = escapeHtml(String(row[colIdx] ?? ''));
+                  if (effectiveIncHeaders) {
+                    html += `<strong class="field-name">${escapeHtml(exportHeaders[i])}:</strong> ${val} &nbsp;&bull;&nbsp; `;
+                  } else {
+                    html += `${val} &nbsp;&bull;&nbsp; `;
+                  }
+                });
+                html += `</p>`;
+              }
+              html += `</div>`;
             });
 
             html += '</body></html>';
@@ -5751,13 +6025,13 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
               tr:nth-child(even) td { background-color: #f8fafc; }
             </style></head><body>`;
 
-            if (includeTitleRow) {
+            if (effectiveIncTitle) {
               html += `<h1>${escapeHtml(docTitle)}</h1>`;
               html += `<p class="meta">Exportado desde DataHub el ${new Date().toLocaleString()} &bull; Total de filas: ${sourceRows.length} &bull; Columnas: ${exportHeaders.length}</p>`;
             }
 
             html += '<table>';
-            if (includeHeaders) {
+            if (effectiveIncHeaders) {
               html += '<thead><tr>';
               exportHeaders.forEach(h => {
                 html += `<th>${escapeHtml(h)}</th>`;
@@ -5840,22 +6114,46 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
           const lastElem = bodyContent[bodyContent.length - 1];
           const insertIdx = Math.max(1, (lastElem?.endIndex || 2) - 1);
 
-          let textToInsert = `\n\n════════════════════════════════════════════════════════════════\n`;
-          textToInsert += `${docTitle}\n`;
-          textToInsert += `Exportado el: ${new Date().toLocaleString()} | Filas: ${sourceRows.length}\n`;
-          textToInsert += `════════════════════════════════════════════════════════════════\n\n`;
+          let textToInsert = '';
+          if (effectiveIncTitle) {
+            textToInsert += `\n\n════════════════════════════════════════════════════════════════\n`;
+            textToInsert += `${docTitle}\n`;
+            textToInsert += `Exportado el: ${new Date().toLocaleString()} | Filas: ${sourceRows.length}\n`;
+            textToInsert += `════════════════════════════════════════════════════════════════\n\n`;
+          } else {
+            textToInsert += `\n\n`;
+          }
 
           if (structureMode === 'paragraphs') {
             sourceRows.forEach((row, rIdx) => {
               const primaryVal = row[selectedColIndices[0]] ? String(row[selectedColIndices[0]]) : '';
-              textToInsert += `▶ Registro #${rIdx + 1}${primaryVal ? ' — ' + primaryVal : ''}\n`;
-              selectedColIndices.forEach((colIdx, i) => {
-                textToInsert += `  • ${exportHeaders[i]}: ${String(row[colIdx] ?? '')}\n`;
-              });
-              textToInsert += '\n';
+              if (effectiveIncHeaders) {
+                textToInsert += `▶ Registro #${rIdx + 1}${primaryVal ? ' — ' + primaryVal : ''}\n`;
+              }
+              if (effectiveVertical) {
+                selectedColIndices.forEach((colIdx, i) => {
+                  const val = String(row[colIdx] ?? '');
+                  if (effectiveIncHeaders) {
+                    textToInsert += `  • ${exportHeaders[i]}: ${val}\n`;
+                  } else {
+                    textToInsert += `${val}\n`;
+                  }
+                });
+              } else {
+                const line = selectedColIndices.map((colIdx, i) => {
+                  const val = String(row[colIdx] ?? '');
+                  return effectiveIncHeaders ? `${exportHeaders[i]}: ${val}` : val;
+                }).join('  |  ');
+                textToInsert += line + '\n';
+              }
+              if (effectiveSeparators) {
+                textToInsert += `----------------------------------------------------\n`;
+              } else {
+                textToInsert += '\n';
+              }
             });
           } else {
-            if (includeHeaders) {
+            if (effectiveIncHeaders) {
               textToInsert += exportHeaders.join('  |  ') + '\n';
               textToInsert += exportHeaders.map(() => '----------------').join('  |  ') + '\n';
             }
