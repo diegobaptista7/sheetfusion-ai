@@ -1970,11 +1970,37 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
             <!-- Dynamically populated checklist of connected files with tab selectors -->
           </div>
 
-          <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border-light); display: flex; gap: 1.5rem; flex-wrap: wrap;">
-            <label class="form-check">
-              <input type="checkbox" id="checkUnionAddSourceCol" checked />
-              <span id="t_optAddSourceCol">Agregar columna con el nombre del archivo de origen</span>
-            </label>
+          <!-- Options for Union: Ordering hint & Document Union Mode -->
+          <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border-light); display: flex; flex-direction: column; gap: 0.85rem;">
+            <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;">
+              <label class="form-check">
+                <input type="checkbox" id="checkUnionAddSourceCol" checked />
+                <span id="t_optAddSourceCol">Agregar columna con el nombre del archivo de origen</span>
+              </label>
+              <span style="font-size: 0.8rem; color: var(--text-secondary); margin-left: auto;">
+                💡 <em>Usa los botones ▲ y ▼ o escribe la posición en cada archivo para definir el orden exacto de la unión.</em>
+              </span>
+            </div>
+
+            <!-- Dedicated Continuous Mode for Docs / Word / PDF -->
+            <div id="unionDocModeBox" style="background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: var(--radius-sm); padding: 0.85rem 1rem;">
+              <div style="font-weight: 700; font-size: 0.88rem; color: #1e40af; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.45rem;">
+                <span>📄</span> <span>Modo de Unión para Documentos (Google Docs, Word .docx, PDF):</span>
+              </div>
+              <p style="font-size: 0.78rem; color: #3b82f6; margin-bottom: 0.5rem;">
+                Elige cómo combinar el contenido cuando se incluyan documentos de texto:
+              </p>
+              <div style="display: flex; flex-direction: column; gap: 0.45rem;">
+                <label class="form-check" style="cursor: pointer; font-size: 0.83rem;">
+                  <input type="radio" name="unionDocMode" value="continuous" checked />
+                  <span><strong>📄 Unir documentos continuos (uno debajo del otro):</strong> Mantiene intacto el formato original, párrafos completos, títulos y tablas de cada archivo, uniéndolos secuencialmente en el orden personalizado elegido.</span>
+                </label>
+                <label class="form-check" style="cursor: pointer; font-size: 0.83rem;">
+                  <input type="radio" name="unionDocMode" value="tabular" />
+                  <span><strong>📊 Extracción tabular estándar:</strong> Extrae como tabla y alinea por columnas coincidentes.</span>
+                </label>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -2178,11 +2204,17 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         </div>
       </div>
 
-      <!-- Export Columns card (inline in Filters & Table tab) -->
-      <div class="card" id="exportColsCard" style="display:none;">
-        <div class="card-header" style="cursor:pointer; user-select:none;" onclick="toggleExportColsCard()">
-          <h2 class="card-title">📋 <span id="t_exportColsCardTitle">Columnas a exportar</span></h2>
+      <!-- Export Columns & Reordering card (in Filters & Table tab) -->
+      <div class="card" id="exportColsCard" style="display:none; margin-bottom: 1rem; border: 1.5px solid var(--border);">
+        <div class="card-header" style="cursor:pointer; user-select:none; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;" onclick="toggleExportColsCard()">
           <div style="display:flex; align-items:center; gap:0.5rem;">
+            <h2 class="card-title" style="margin:0;">📋 <span id="t_exportColsCardTitle">Columnas a Exportar y Orden Personalizado</span></h2>
+            <span class="badge badge-primary" id="badgeColsOrderCount" style="font-size:0.75rem;">0 seleccionadas</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.6rem;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); resetExportColumnsOrder()" style="font-size:0.75rem; padding:0.2rem 0.55rem;" title="Restablecer al orden original de la tabla">
+              🔄 Restablecer orden
+            </button>
             <a class="filter-link" onclick="event.stopPropagation(); selectAllExportCols(true)" id="t_selectAllCols">Todas</a>
             <span style="color:var(--text-muted);">|</span>
             <a class="filter-link" onclick="event.stopPropagation(); selectAllExportCols(false)" id="t_deselectAllCols">Ninguna</a>
@@ -2190,7 +2222,10 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
           </div>
         </div>
         <div class="card-body" id="exportColsCardBody">
-          <div id="exportColsChecklist" style="display:flex; flex-wrap:wrap; gap:0.4rem 1.5rem; max-height:160px; overflow-y:auto; padding:0.25rem 0;">
+          <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.75rem;">
+            Configura qué columnas exportar y su orden exacto (Columna 1, Columna 2, Columna 3...). Puedes cambiar la posición numérica o usar los botones ▲ y ▼:
+          </p>
+          <div id="exportColsChecklist" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:0.5rem; max-height:280px; overflow-y:auto; padding:0.25rem 0;">
             <span class="text-secondary" style="font-size:0.8rem;" id="t_noColsMsg">No hay datos cargados.</span>
           </div>
         </div>
@@ -4537,6 +4572,28 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
     // =========================================================================
     // TAB 3: UNION OF FILES (MERGE)
     // =========================================================================
+    // Union files order state
+    let unionFilesOrder = [];
+
+    function moveUnionFileItem(idx, direction) {
+      if (idx + direction < 0 || idx + direction >= unionFilesOrder.length) return;
+      const temp = unionFilesOrder[idx];
+      unionFilesOrder[idx] = unionFilesOrder[idx + direction];
+      unionFilesOrder[idx + direction] = temp;
+      updateUnionFilesList();
+    }
+
+    function changeUnionFilePosition(fileId, newPos) {
+      const pos = parseInt(newPos, 10);
+      if (isNaN(pos) || pos < 1 || pos > unionFilesOrder.length) return;
+      const targetIdx = pos - 1;
+      const currentIdx = unionFilesOrder.indexOf(fileId);
+      if (currentIdx === -1 || currentIdx === targetIdx) return;
+      unionFilesOrder.splice(currentIdx, 1);
+      unionFilesOrder.splice(targetIdx, 0, fileId);
+      updateUnionFilesList();
+    }
+
     function updateUnionFilesList() {
       const container = document.getElementById('unionFilesSelectionContainer');
       if (!container) return;
@@ -4545,6 +4602,18 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         container.innerHTML = `<div class="empty-state"><p>${t('emptyFilesText')}</p></div>`;
         return;
       }
+
+      // Sync unionFilesOrder with connectedFiles
+      const connectedIds = connectedFiles.map(f => f.id);
+      unionFilesOrder = unionFilesOrder.filter(id => connectedIds.includes(id));
+      connectedIds.forEach(id => {
+        if (!unionFilesOrder.includes(id)) unionFilesOrder.push(id);
+      });
+
+      // Sort files by unionFilesOrder
+      const orderedFiles = unionFilesOrder
+        .map(id => connectedFiles.find(f => f.id === id))
+        .filter(Boolean);
 
       // Recordar selecciones previas
       const prevSelections = {};
@@ -4559,14 +4628,28 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         if (fid) prevChecked[fid] = cb.checked;
       });
 
-      container.innerHTML = connectedFiles.map((f, idx) => {
+      container.innerHTML = orderedFiles.map((f, idx) => {
         const isChecked = prevChecked[f.id] !== undefined ? prevChecked[f.id] : false;
         const cachedTabs = fileTabsCache[f.id] || [];
         const hasCached = cachedTabs.length > 0;
+        const total = orderedFiles.length;
 
         return `
-        <div class="file-item" style="padding: 0.65rem 0.85rem; align-items:center; display:flex; justify-content:space-between; gap:0.5rem; flex-wrap:wrap;">
-          <div class="file-info" style="flex:1; min-width:200px;">
+        <div class="file-item" style="padding: 0.65rem 0.85rem; align-items:center; display:flex; justify-content:space-between; gap:0.5rem; flex-wrap:wrap; border-left: 4px solid ${f.type === 'sheet' ? '#107c41' : (f.type === 'pdf' ? '#dc2626' : '#2563eb')};">
+          
+          <!-- Reordering controls (▲ / ▼ and position number) -->
+          <div style="display:flex; align-items:center; gap:0.4rem; flex-shrink:0;">
+            <div style="display:flex; flex-direction:column; gap:2px;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="moveUnionFileItem(${idx}, -1)" ${idx === 0 ? 'disabled' : ''} title="Mover antes en la unión" style="padding:1px 6px; font-size:0.7rem; line-height:1.2;">▲</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="moveUnionFileItem(${idx}, 1)" ${idx === total - 1 ? 'disabled' : ''} title="Mover después en la unión" style="padding:1px 6px; font-size:0.7rem; line-height:1.2;">▼</button>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:center;">
+              <input type="number" min="1" max="${total}" value="${idx + 1}" onchange="changeUnionFilePosition('${f.id}', this.value)" title="Escribe la posición numérica deseada" style="width:40px; height:24px; text-align:center; font-weight:bold; font-size:0.78rem; border:1px solid #cbd5e1; border-radius:4px; padding:0 2px;" />
+              <small style="font-size:0.65rem; color:#64748b; font-weight:600;">Posición</small>
+            </div>
+          </div>
+
+          <div class="file-info" style="flex:1; min-width:180px;">
             <label class="form-check" style="margin:0; cursor:pointer;">
               <input type="checkbox" class="union-file-checkbox" data-file-id="${f.id}" ${isChecked ? 'checked' : ''} />
               <span style="font-size: 1.25rem;">${f.type === 'sheet' ? '📗' : (f.type === 'pdf' ? '📕' : '📘')}</span>
@@ -4577,6 +4660,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
                 <span class="badge ${f.type === 'sheet' ? 'badge-success' : (f.type === 'pdf' ? 'badge-danger' : 'badge-primary')}">
                   ${f.type === 'sheet' ? 'Sheets' : (f.type === 'pdf' ? 'PDF' : 'Docs')}
                 </span>
+                <span style="font-size:0.72rem; color:var(--text-secondary);">Orden: <strong>#${idx + 1}</strong></span>
                 ${f.type === 'sheet' ? `
                   <span id="union_tabs_badge_${f.id}" class="badge"
                         style="${hasCached ? 'background:#dcfce7; color:#15803d;' : 'background:#f1f5f9; color:#64748b;'} font-size:0.7rem;">
@@ -4734,12 +4818,110 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       }
     }
 
+    // Extract rich document content preserving original format for continuous document union
+    async function extractFullDocumentContent(file) {
+      if (file.type === 'pdf') {
+        try {
+          const exportRes = await apiFetch(`https://www.googleapis.com/drive/v3/files/${file.id}/export?mimeType=text/plain`);
+          const text = typeof exportRes === 'string' ? exportRes : (await exportRes.text());
+          const paras = text.split(/\r?\n\r?\n/).map(p => p.trim()).filter(Boolean);
+          const htmlContent = paras.map(p => `<p style="margin:6pt 0; line-height:1.45;">${escapeHtml(p).replace(/\n/g, '<br>')}</p>`).join('');
+          const rows = paras.map((p, idx) => [file.name, `Párrafo ${idx + 1}`, p]);
+          return {
+            headers: [currentLanguage === 'es' ? 'Documento' : 'Document', currentLanguage === 'es' ? 'Sección' : 'Section', currentLanguage === 'es' ? 'Contenido' : 'Content'],
+            rows: rows,
+            htmlContent: htmlContent,
+            rawText: text
+          };
+        } catch(e) {
+          console.warn('PDF continuous extract error:', e);
+          return await extractDocData(file.id, { isPdf: true });
+        }
+      }
+
+      // Google Docs or Word (.docx converted)
+      const url = `https://docs.googleapis.com/v1/documents/${file.id}`;
+      const doc = await apiFetch(url);
+      const content = (doc.body && doc.body.content) || [];
+
+      let docHtml = '';
+      let rawText = '';
+      const rows = [];
+
+      for (const elem of content) {
+        if (elem.table) {
+          // Table element: preserve table HTML and add rows
+          let tableHtml = '<table style="border-collapse:collapse; width:100%; margin:8pt 0; border:1px solid #cbd5e1;">';
+          let isFirstRow = true;
+          for (const tRow of elem.table.tableRows) {
+            tableHtml += '<tr>';
+            const cellTexts = [];
+            for (const tCell of tRow.tableCells) {
+              let cellContent = '';
+              for (const cElem of (tCell.content || [])) {
+                if (cElem.paragraph) {
+                  for (const pe of (cElem.paragraph.elements || [])) {
+                    if (pe.textRun && pe.textRun.content) {
+                      cellContent += pe.textRun.content;
+                    }
+                  }
+                }
+              }
+              const cleanCell = cellContent.trim();
+              cellTexts.push(cleanCell);
+              const tag = isFirstRow ? 'th style="background:#1a73e8; color:#fff; font-weight:bold; padding:5pt 8pt; border:1px solid #1a73e8;"' : 'td style="padding:5pt 8pt; border:1px solid #cbd5e1;"';
+              tableHtml += `<${tag}>${escapeHtml(cleanCell)}</${isFirstRow ? 'th' : 'td'}>`;
+            }
+            tableHtml += '</tr>';
+            rows.push([file.name, isFirstRow ? 'Tabla (Encabezado)' : 'Tabla (Fila)', cellTexts.join(' | ')]);
+            isFirstRow = false;
+          }
+          tableHtml += '</table>';
+          docHtml += tableHtml;
+        } else if (elem.paragraph) {
+          let pText = '';
+          for (const pe of (elem.paragraph.elements || [])) {
+            if (pe.textRun && pe.textRun.content) {
+              pText += pe.textRun.content;
+            }
+          }
+          const cleanP = pText.trim();
+          if (cleanP) {
+            rawText += cleanP + '\n\n';
+            const style = elem.paragraph.paragraphStyle?.namedStyleType || '';
+            const isHeading = style.startsWith('HEADING_') || style === 'TITLE';
+            if (isHeading) {
+              docHtml += `<h2 style="color:#1a73e8; margin-top:10pt; margin-bottom:4pt;">${escapeHtml(cleanP)}</h2>`;
+              rows.push([file.name, 'Título / Encabezado', cleanP]);
+            } else {
+              docHtml += `<p style="margin:4pt 0; line-height:1.45;">${escapeHtml(cleanP)}</p>`;
+              rows.push([file.name, 'Párrafo', cleanP]);
+            }
+          }
+        }
+      }
+
+      return {
+        headers: [currentLanguage === 'es' ? 'Documento' : 'Document', currentLanguage === 'es' ? 'Sección' : 'Section', currentLanguage === 'es' ? 'Contenido' : 'Content'],
+        rows: rows,
+        htmlContent: docHtml,
+        rawText: rawText
+      };
+    }
+
     async function executeUnionFiles() {
-      const checkboxes = document.querySelectorAll('.union-file-checkbox:checked');
-      if (checkboxes.length < 2) {
+      // Find all checked files, ordered by unionFilesOrder
+      const checkedIds = Array.from(document.querySelectorAll('.union-file-checkbox:checked')).map(cb => cb.getAttribute('data-file-id'));
+      if (checkedIds.length < 2) {
         showToast(currentLanguage === 'es' ? 'Selecciona al menos 2 archivos para unir.' : 'Select at least 2 files to merge.', 'warning');
         return;
       }
+
+      // Order checked files strictly according to unionFilesOrder
+      const orderedCheckedFiles = unionFilesOrder
+        .filter(id => checkedIds.includes(id))
+        .map(id => connectedFiles.find(f => f.id === id))
+        .filter(Boolean);
 
       const btn = document.getElementById('btnExecuteUnion');
       btn.disabled = true;
@@ -4748,58 +4930,115 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       try {
         const addSourceCol = document.getElementById('checkUnionAddSourceCol').checked;
         const sourceColName = currentLanguage === 'es' ? '_Archivo_Origen' : '_Source_File';
+        const docModeRadio = document.querySelector('input[name="unionDocMode"]:checked');
+        const isContinuousDocMode = docModeRadio ? docModeRadio.value === 'continuous' : true;
+
+        // Check if all or some files are documents (docs/word/pdf)
+        const hasDocFiles = orderedCheckedFiles.some(f => f.type === 'doc' || f.type === 'pdf');
+        const isAllDocs = orderedCheckedFiles.every(f => f.type === 'doc' || f.type === 'pdf');
 
         const extractedList = [];
-        const allHeadersSet = new Set();
-        if (addSourceCol) allHeadersSet.add(sourceColName);
 
-        for (const cb of checkboxes) {
-          const fileId = cb.getAttribute('data-file-id');
-          const file = connectedFiles.find(f => f.id === fileId);
-          if (!file) continue;
+        if (hasDocFiles && isContinuousDocMode) {
+          // ==============================================================
+          // CONTINUOUS DOCUMENT UNION: Preserves exact original formatting
+          // ==============================================================
+          let allDocSections = [];
+          const mergedRows = [];
+          const mergedHeaders = [sourceColName, currentLanguage === 'es' ? 'Sección' : 'Section', currentLanguage === 'es' ? 'Contenido' : 'Content'];
 
-          let tabSelect = document.querySelector(`.union-sheet-tab-select[data-file-id="${fileId}"]`);
-          let sheetTab = tabSelect ? tabSelect.value.trim() : '';
+          for (let i = 0; i < orderedCheckedFiles.length; i++) {
+            const file = orderedCheckedFiles[i];
+            btn.innerHTML = `<span class="spinner"></span> <span>${currentLanguage === 'es' ? `Uniendo (${i + 1}/${orderedCheckedFiles.length}): ${file.name}...` : `Merging (${i + 1}/${orderedCheckedFiles.length})...`}</span>`;
 
-          let data;
-          if (file.type === 'sheet') {
-            data = await extractSheetData(file.id, sheetTab, { hasHeader: true, skipEmpty: true, trimVal: true });
-          } else {
-            data = await extractDocData(file.id, { trimVal: true, isPdf: file.type === 'pdf' });
+            let data;
+            if (file.type === 'sheet') {
+              let tabSelect = document.querySelector(`.union-sheet-tab-select[data-file-id="${file.id}"]`);
+              let sheetTab = tabSelect ? tabSelect.value.trim() : '';
+              data = await extractSheetData(file.id, sheetTab, { hasHeader: true, skipEmpty: true, trimVal: true });
+              // Format sheet table as continuous HTML block
+              let sheetHtml = `<div style="margin:12pt 0;"><h3 style="color:#107c41; margin-bottom:4pt;">📗 ${escapeHtml(file.name)}</h3>`;
+              sheetHtml += `<table style="border-collapse:collapse; width:100%; border:1px solid #cbd5e1;">`;
+              sheetHtml += '<tr>' + data.headers.map(h => `<th style="background:#107c41; color:#fff; padding:5pt 8pt;">${escapeHtml(h)}</th>`).join('') + '</tr>';
+              data.rows.forEach(r => {
+                sheetHtml += '<tr>' + r.map(c => `<td style="padding:4pt 8pt; border:1px solid #cbd5e1;">${escapeHtml(String(c))}</td>`).join('') + '</tr>';
+                mergedRows.push([file.name, 'Fila de Datos', r.join(' | ')]);
+              });
+              sheetHtml += '</table></div>';
+              allDocSections.push({ fileName: file.name, type: file.type, htmlContent: sheetHtml, rawText: data.rows.map(r => r.join(' | ')).join('\n') });
+            } else {
+              data = await extractFullDocumentContent(file);
+              allDocSections.push({ fileName: file.name, type: file.type, htmlContent: data.htmlContent, rawText: data.rawText });
+              data.rows.forEach(r => mergedRows.push(r));
+            }
+            extractedList.push({ file, data });
           }
 
-          data.headers.forEach(h => allHeadersSet.add(h));
-          extractedList.push({ file, data });
-        }
+          if (dataHistoryStack.length === 0 || !dataHistoryStack[0]) { initDataHistory('Datos originales'); }
+          currentDataset = {
+            source: 'Union (' + orderedCheckedFiles.map(e => e.name).join(' + ') + ')',
+            title: currentLanguage === 'es' ? 'Unión Continua de Documentos' : 'Continuous Merged Documents',
+            headers: mergedHeaders,
+            rows: mergedRows,
+            isContinuousDocMerge: true,
+            docSections: allDocSections
+          };
 
-        const mergedHeaders = Array.from(allHeadersSet);
-        const mergedRows = [];
+        } else {
+          // ==============================================================
+          // TABULAR UNION: Aligns by matching column names
+          // ==============================================================
+          const allHeadersSet = new Set();
+          if (addSourceCol) allHeadersSet.add(sourceColName);
 
-        for (const item of extractedList) {
-          const headerIndexMap = {};
-          item.data.headers.forEach((h, idx) => {
-            headerIndexMap[h] = idx;
-          });
+          for (let i = 0; i < orderedCheckedFiles.length; i++) {
+            const file = orderedCheckedFiles[i];
+            btn.innerHTML = `<span class="spinner"></span> <span>${currentLanguage === 'es' ? `Extrayendo (${i + 1}/${orderedCheckedFiles.length}): ${file.name}...` : `Extracting (${i + 1}/${orderedCheckedFiles.length})...`}</span>`;
 
-          for (const row of item.data.rows) {
-            const newRow = mergedHeaders.map(colHeader => {
-              if (colHeader === sourceColName && addSourceCol) {
-                return item.file.name;
-              }
-              const oldIdx = headerIndexMap[colHeader];
-              return oldIdx !== undefined ? (row[oldIdx] ?? '') : '';
+            let tabSelect = document.querySelector(`.union-sheet-tab-select[data-file-id="${file.id}"]`);
+            let sheetTab = tabSelect ? tabSelect.value.trim() : '';
+
+            let data;
+            if (file.type === 'sheet') {
+              data = await extractSheetData(file.id, sheetTab, { hasHeader: true, skipEmpty: true, trimVal: true });
+            } else {
+              data = await extractDocData(file.id, { trimVal: true, isPdf: file.type === 'pdf' });
+            }
+
+            data.headers.forEach(h => allHeadersSet.add(h));
+            extractedList.push({ file, data });
+          }
+
+          const mergedHeaders = Array.from(allHeadersSet);
+          const mergedRows = [];
+
+          for (const item of extractedList) {
+            const headerIndexMap = {};
+            item.data.headers.forEach((h, idx) => {
+              headerIndexMap[h] = idx;
             });
-            mergedRows.push(newRow);
-          }
-        }
 
-        if (dataHistoryStack.length === 0 || !dataHistoryStack[0]) { initDataHistory('Datos originales'); }
-        currentDataset = {
-          source: 'Union (' + extractedList.map(e => e.file.name).join(' + ') + ')',
-          title: currentLanguage === 'es' ? 'Unión de Archivos' : 'Merged Dataset',
-          headers: mergedHeaders,
-          rows: mergedRows
-        };
+            for (const row of item.data.rows) {
+              const newRow = mergedHeaders.map(colHeader => {
+                if (colHeader === sourceColName && addSourceCol) {
+                  return item.file.name;
+                }
+                const oldIdx = headerIndexMap[colHeader];
+                return oldIdx !== undefined ? (row[oldIdx] ?? '') : '';
+              });
+              mergedRows.push(newRow);
+            }
+          }
+
+          if (dataHistoryStack.length === 0 || !dataHistoryStack[0]) { initDataHistory('Datos originales'); }
+          currentDataset = {
+            source: 'Union (' + orderedCheckedFiles.map(e => e.name).join(' + ') + ')',
+            title: currentLanguage === 'es' ? 'Unión de Archivos' : 'Merged Dataset',
+            headers: mergedHeaders,
+            rows: mergedRows,
+            isContinuousDocMerge: false
+          };
+        }
 
         initDataHistory(`Unión de ${extractedList.length} archivos`);
         initializeFiltersAndData();
@@ -4846,6 +5085,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       currentPage = 1;
       currentSortColumn = null;
       currentSortAsc = true;
+      initExportColumnsOrderState();
 
       // Pre-select ALL values for every column (no active filter = show all)
       currentDataset.headers.forEach((h, colIdx) => {
@@ -5543,6 +5783,18 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       if (paraList) {
         if (currentDataset.headers.length === 0 || filteredRows.length === 0) {
           paraList.innerHTML = `<div class="empty-state" style="padding: 2rem; text-align: center; color: #94a3b8;">${t('tableEmptyMsg')}</div>`;
+        } else if (currentDataset.isContinuousDocMerge && currentDataset.docSections && currentDataset.docSections.length > 0) {
+          // Render continuous document preview
+          paraList.innerHTML = currentDataset.docSections.map((sec, idx) => `
+            <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:8px; padding:1.25rem; margin-bottom:1.25rem; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+              <div style="background:#eff6ff; color:#1e40af; border-left:4px solid #2563eb; padding:0.5rem 0.85rem; border-radius:4px; font-weight:700; font-size:0.95rem; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
+                <span>📄</span> <span>Documento #${idx + 1}: ${escapeHtml(sec.fileName)}</span>
+              </div>
+              <div style="line-height:1.5; color:#1e293b;">
+                ${sec.htmlContent}
+              </div>
+            </div>
+          `).join('');
         } else {
           paraList.innerHTML = pageRows.map((row, rIdx) => {
             const rowNumber = startIdx + rIdx + 1;
@@ -5655,12 +5907,14 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         showToast('No hay filas para exportar.', 'warning');
         return;
       }
-      const headers = currentDataset.headers;
+      const colIndices = getOrderedExportColumnIndices();
+      const headers = colIndices.length > 0 ? colIndices.map(i => currentDataset.headers[i]) : currentDataset.headers;
       const csvLines = [];
       csvLines.push(headers.map(h => `"${String(h).replace(/"/g, '""')}"`).join(','));
 
       filteredRows.forEach(r => {
-        csvLines.push(r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','));
+        const rowVals = colIndices.length > 0 ? colIndices.map(i => r[i] ?? '') : r;
+        csvLines.push(rowVals.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','));
       });
 
       const blob = new Blob(["\uFEFF" + csvLines.join("\r\n")], { type: 'text/csv;charset=utf-8;' });
@@ -5961,32 +6215,145 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       document.getElementById('exportAllCount').textContent = currentDataset.rows.length;
     }
 
+    // Export columns custom order state: [{ idx: 0, name: 'Col', order: 1, checked: true }]
+    let exportColumnsOrderState = [];
+
+    function initExportColumnsOrderState() {
+      if (!currentDataset || !currentDataset.headers || currentDataset.headers.length === 0) {
+        exportColumnsOrderState = [];
+        return;
+      }
+      exportColumnsOrderState = currentDataset.headers.map((h, idx) => ({
+        idx: idx,
+        name: h,
+        order: idx + 1,
+        checked: true
+      }));
+    }
+
+    function setExportColumnPosition(colIdx, newPos) {
+      const pos = parseInt(newPos, 10);
+      if (isNaN(pos) || pos < 1 || pos > exportColumnsOrderState.length) return;
+      const item = exportColumnsOrderState.find(c => c.idx === colIdx);
+      if (!item) return;
+
+      // Sort current items by order
+      exportColumnsOrderState.sort((a, b) => a.order - b.order);
+      const currentPos = exportColumnsOrderState.findIndex(c => c.idx === colIdx);
+      if (currentPos === -1 || currentPos === pos - 1) return;
+
+      exportColumnsOrderState.splice(currentPos, 1);
+      exportColumnsOrderState.splice(pos - 1, 0, item);
+
+      // Re-assign 1..N order
+      exportColumnsOrderState.forEach((c, i) => { c.order = i + 1; });
+      updateExportColumnsChecklist();
+      renderMainTable();
+    }
+
+    function moveExportColumn(colIdx, direction) {
+      exportColumnsOrderState.sort((a, b) => a.order - b.order);
+      const currentPos = exportColumnsOrderState.findIndex(c => c.idx === colIdx);
+      if (currentPos === -1) return;
+      const targetPos = currentPos + direction;
+      if (targetPos < 0 || targetPos >= exportColumnsOrderState.length) return;
+
+      const temp = exportColumnsOrderState[currentPos];
+      exportColumnsOrderState[currentPos] = exportColumnsOrderState[targetPos];
+      exportColumnsOrderState[targetPos] = temp;
+
+      exportColumnsOrderState.forEach((c, i) => { c.order = i + 1; });
+      updateExportColumnsChecklist();
+      renderMainTable();
+    }
+
+    function handleExportColCheckChange(colIdx, checked) {
+      const item = exportColumnsOrderState.find(c => c.idx === colIdx);
+      if (item) item.checked = checked;
+      updateExportColumnsBadge();
+      renderMainTable();
+    }
+
+    function resetExportColumnsOrder() {
+      initExportColumnsOrderState();
+      updateExportColumnsChecklist();
+      renderMainTable();
+      showToast(currentLanguage === 'es' ? 'Orden de columnas restablecido.' : 'Column order reset.', 'info');
+    }
+
+    function updateExportColumnsBadge() {
+      const badge = document.getElementById('badgeColsOrderCount');
+      if (badge && exportColumnsOrderState.length > 0) {
+        const checkedCount = exportColumnsOrderState.filter(c => c.checked).length;
+        badge.textContent = `${checkedCount} de ${exportColumnsOrderState.length} ${currentLanguage === 'es' ? 'seleccionadas' : 'selected'}`;
+      }
+    }
+
     function updateExportColumnsChecklist() {
       const container = document.getElementById('exportColsChecklist');
       const card      = document.getElementById('exportColsCard');
       if (!container) return;
 
-      if (currentDataset.headers.length === 0) {
+      if (!currentDataset || currentDataset.headers.length === 0) {
         container.innerHTML = `<span class="text-secondary" style="font-size: 0.8rem;">${t('noColsMsg')}</span>`;
         if (card) card.style.display = 'none';
         return;
       }
 
+      // Initialize or sync state if length changed or headers changed
+      const headerNames = currentDataset.headers;
+      const stateNames = exportColumnsOrderState.map(c => c.name);
+      if (exportColumnsOrderState.length !== headerNames.length || !headerNames.every((h, i) => stateNames.includes(h))) {
+        initExportColumnsOrderState();
+      }
+
       // Show the card
       if (card) card.style.display = '';
 
-      container.innerHTML = currentDataset.headers.map((h, idx) => `
-        <label class="form-check" style="min-width:140px; flex:0 0 auto;">
-          <input type="checkbox" class="export-col-checkbox" data-col-idx="${idx}" checked />
-          <span>${escapeHtml(h)}</span>
-        </label>
+      // Sort items by current order
+      const sorted = [...exportColumnsOrderState].sort((a, b) => a.order - b.order);
+      const total = sorted.length;
+
+      container.innerHTML = sorted.map((col, posIdx) => `
+        <div class="export-col-row" style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem; padding:0.4rem 0.65rem; background:#ffffff; border:1px solid #e2e8f0; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
+          <label class="form-check" style="margin:0; cursor:pointer; display:flex; align-items:center; gap:0.45rem; flex:1; min-width:0;">
+            <input type="checkbox" class="export-col-checkbox" data-col-idx="${col.idx}" ${col.checked ? 'checked' : ''} onchange="handleExportColCheckChange(${col.idx}, this.checked)" />
+            <span style="font-weight:600; font-size:0.83rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(col.name)}">${escapeHtml(col.name)}</span>
+          </label>
+          <div style="display:flex; align-items:center; gap:0.3rem; flex-shrink:0;">
+            <span style="font-size:0.72rem; color:#64748b; font-weight:600;">Col:</span>
+            <input type="number" class="export-col-order-input" min="1" max="${total}" value="${col.order}" onchange="setExportColumnPosition(${col.idx}, this.value)" title="Escribe qué columna deseas que sea (1, 2, 3...)" style="width:44px; height:24px; padding:0 3px; text-align:center; font-weight:bold; font-size:0.8rem; border:1px solid #cbd5e1; border-radius:4px;" />
+            <button type="button" class="btn btn-secondary btn-sm" onclick="moveExportColumn(${col.idx}, -1)" ${posIdx === 0 ? 'disabled' : ''} title="Mover antes en la tabla" style="padding:1px 5px; font-size:0.7rem; height:24px; line-height:1.2;">▲</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="moveExportColumn(${col.idx}, 1)" ${posIdx === total - 1 ? 'disabled' : ''} title="Mover después en la tabla" style="padding:1px 5px; font-size:0.7rem; height:24px; line-height:1.2;">▼</button>
+          </div>
+        </div>
       `).join('');
+
+      updateExportColumnsBadge();
     }
 
     function selectAllExportCols(selectAll) {
+      exportColumnsOrderState.forEach(c => { c.checked = selectAll; });
       document.querySelectorAll('.export-col-checkbox').forEach(cb => {
         cb.checked = selectAll;
       });
+      updateExportColumnsBadge();
+      renderMainTable();
+    }
+
+    // Helper: returns the column indices sorted strictly by user order
+    function getOrderedExportColumnIndices() {
+      if (!currentDataset || !currentDataset.headers || currentDataset.headers.length === 0) {
+        return [];
+      }
+      if (!exportColumnsOrderState || exportColumnsOrderState.length === 0) {
+        const cbs = Array.from(document.querySelectorAll('.export-col-checkbox:checked'));
+        return cbs.length > 0 ? cbs.map(cb => parseInt(cb.getAttribute('data-col-idx'), 10)) : currentDataset.headers.map((_, i) => i);
+      }
+      const checked = exportColumnsOrderState.filter(c => c.checked);
+      if (checked.length === 0) return [];
+      checked.sort((a, b) => a.order - b.order);
+      return checked.map(c => c.idx);
     }
 
     async function executeExportToSheets() {
@@ -5995,8 +6362,8 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         return;
       }
 
-      const selectedColCheckboxes = Array.from(document.querySelectorAll('.export-col-checkbox:checked'));
-      if (selectedColCheckboxes.length === 0) {
+      const selectedColIndices = getOrderedExportColumnIndices();
+      if (selectedColIndices.length === 0) {
         showToast(currentLanguage === 'es' ? 'Selecciona al menos una columna para exportar.' : 'Select at least one column to export.', 'warning');
         return;
       }
@@ -6039,7 +6406,6 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         }
 
         const sourceRows = (scope === 'filtered') ? filteredRows : currentDataset.rows;
-        const selectedColIndices = selectedColCheckboxes.map(cb => parseInt(cb.getAttribute('data-col-idx'), 10));
         const exportHeaders = selectedColIndices.map(idx => currentDataset.headers[idx]);
 
         // Construct 2D values array
@@ -6338,10 +6704,11 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         showToast(currentLanguage === 'es' ? 'No hay datos para descargar.' : 'No data to download.', 'warning');
         return;
       }
-      const selectedColCheckboxes = Array.from(document.querySelectorAll('.export-col-checkbox:checked'));
-      const colIndices = selectedColCheckboxes.length > 0
-        ? selectedColCheckboxes.map(cb => parseInt(cb.getAttribute('data-col-idx'), 10))
-        : currentDataset.headers.map(function(_, i) { return i; });
+      const colIndices = getOrderedExportColumnIndices();
+      if (colIndices.length === 0) {
+        showToast(currentLanguage === 'es' ? 'Selecciona al menos una columna para exportar.' : 'Select at least one column to export.', 'warning');
+        return;
+      }
       const exportHeaders = colIndices.map(function(i) { return currentDataset.headers[i]; });
       const scope = (document.querySelector('input[name="exportRowsScope"]:checked') || {}).value || 'filtered';
       const sourceRows = scope === 'filtered' ? filteredRows : currentDataset.rows;
@@ -6357,7 +6724,15 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       const vertical = (document.getElementById('chkDocVerticalLayout') || {}).checked !== false;
       const separators = (document.getElementById('chkDocRecordSeparators') || {}).checked !== false;
       let bodyHtml = '';
-      if (structure === 'table') {
+      if (currentDataset.isContinuousDocMerge && currentDataset.docSections && currentDataset.docSections.length > 0) {
+        // Continuous Document Merge export: output each document in sequence
+        bodyHtml = currentDataset.docSections.map((sec, idx) => {
+          return '<div style="margin-bottom:24pt;' + (idx > 0 ? 'page-break-before:always; padding-top:16pt; border-top:2px solid #cbd5e1;' : '') + '">' +
+            '<h1 style="color:#1a73e8; font-size:16pt; margin-bottom:8pt;">📄 ' + escapeHtml(sec.fileName) + '</h1>' +
+            sec.htmlContent +
+            '</div>';
+        }).join('');
+      } else if (structure === 'table') {
         let theadRow = '';
         if (incHeaders) {
           theadRow = '<tr>' + exportHeaders.map(function(h) {
@@ -6418,8 +6793,8 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         return;
       }
 
-      const selectedColCheckboxes = Array.from(document.querySelectorAll('.export-col-checkbox:checked'));
-      if (selectedColCheckboxes.length === 0) {
+      const selectedColIndices = getOrderedExportColumnIndices();
+      if (selectedColIndices.length === 0) {
         showToast(currentLanguage === 'es' ? 'Selecciona al menos una columna para exportar.' : 'Select at least one column to export.', 'warning');
         return;
       }
@@ -6448,7 +6823,6 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         const fontSize = document.getElementById('exportFontSize')?.value || '10';
 
         const sourceRows = (scope === 'filtered') ? filteredRows : currentDataset.rows;
-        const selectedColIndices = selectedColCheckboxes.map(cb => parseInt(cb.getAttribute('data-col-idx'), 10));
         const exportHeaders = selectedColIndices.map(idx => currentDataset.headers[idx]);
         const structureMode = currentDocStructure;
 
@@ -6467,7 +6841,26 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
           // Construcción HTML nativa para Google Drive (Tabla o Párrafos)
           let html = '<!DOCTYPE html><html><head><meta charset="UTF-8">';
 
-          if (structureMode === 'paragraphs') {
+          if (currentDataset.isContinuousDocMerge && currentDataset.docSections && currentDataset.docSections.length > 0) {
+            html += `<style>
+              body { font-family: ${fontFamily}, sans-serif; font-size: ${fontSize}pt; color: #1e293b; line-height: 1.5; margin: 1.5cm; }
+              h1.doc-file-title { color: #1a73e8; font-size: 16pt; margin-top: 18pt; margin-bottom: 8pt; border-bottom: 2px solid #1a73e8; padding-bottom: 4pt; }
+              .doc-file-boundary { margin-bottom: 24pt; }
+            </style></head><body>`;
+
+            if (effectiveIncTitle) {
+              html += `<h1 style="color:#1a73e8; font-size:20pt; margin-bottom:4pt;">${escapeHtml(docTitle)}</h1>`;
+              html += `<p style="color:#64748b; font-size:9.5pt; margin-bottom:18pt; border-bottom:1px solid #cbd5e1; padding-bottom:6pt;">Unión de ${currentDataset.docSections.length} documentos &bull; ${new Date().toLocaleString()}</p>`;
+            }
+
+            currentDataset.docSections.forEach((sec, idx) => {
+              html += `<div class="doc-file-boundary" style="${idx > 0 ? 'page-break-before:always;' : ''}">`;
+              html += `<h1 class="doc-file-title">📄 ${escapeHtml(sec.fileName)}</h1>`;
+              html += sec.htmlContent;
+              html += '</div>';
+            });
+            html += '</body></html>';
+          } else if (structureMode === 'paragraphs') {
             html += `<style>
               body { font-family: ${fontFamily}, sans-serif; font-size: ${fontSize}pt; color: #1e293b; line-height: 1.5; }
               h1 { color: #1a73e8; font-size: 18pt; margin-top: 0; margin-bottom: 6pt; font-weight: bold; }
@@ -6738,13 +7131,12 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       const scope = scopeEl ? scopeEl.value : 'filtered';
       const sourceRows = (scope === 'filtered') ? filteredRows : currentDataset.rows;
 
-      // Get selected columns from .export-col-checkbox
-      const selectedCbs = Array.from(document.querySelectorAll('.export-col-checkbox:checked'));
-      if (selectedCbs.length === 0) {
+      // Get selected columns sorted by custom order
+      const indices = getOrderedExportColumnIndices();
+      if (indices.length === 0) {
         showToast(currentLanguage === 'es' ? 'Selecciona al menos una columna.' : 'Select at least one column.', 'warning');
         return;
       }
-      const indices = selectedCbs.map(cb => parseInt(cb.getAttribute('data-col-idx'), 10));
       const headers = indices.map(i => currentDataset.headers[i]);
       const rows = sourceRows.map(r => indices.map(i => r[i] ?? ''));
 
