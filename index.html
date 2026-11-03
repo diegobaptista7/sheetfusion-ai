@@ -1580,6 +1580,54 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       background-color: #f8fafc;
     }
 
+  
+    .doc-paragraph-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid #2563eb;
+      border-radius: 6px;
+      padding: 1.1rem 1.35rem;
+      margin-bottom: 0.85rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      transition: all 0.2s ease;
+    }
+    .doc-paragraph-card:hover {
+      border-color: #cbd5e1;
+      border-left-color: #1d4ed8;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.07);
+    }
+    .doc-paragraph-card .card-head {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #1a73e8;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .doc-fields-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.5rem 1.25rem;
+      font-size: 0.88rem;
+    }
+    .doc-field-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .doc-field-label {
+      font-weight: 600;
+      color: #64748b;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .doc-field-value {
+      color: #0f172a;
+      font-size: 0.88rem;
+      word-break: break-word;
+    }
+
   </style>
 </head>
 <body>
@@ -2163,6 +2211,19 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         <div class="card-body" style="padding: 0.75rem 1rem;">
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; align-items: center; font-size: 0.82rem;">
             <div>
+              <label class="form-label" style="font-size: 0.78rem; margin-bottom: 0.25rem; font-weight: 600;">Estructura del contenido en Docs:</label>
+              <div style="display: flex; gap: 0.5rem;">
+                <label id="lblDocStructureTable" style="display: flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.65rem; border: 2px solid #2563eb; background: #eff6ff; color: #2563eb; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600;">
+                  <input type="radio" name="docStructureType" value="table" checked onchange="setDocStructureType('table')" style="accent-color: #2563eb;" />
+                  <span>📊 Tabla</span>
+                </label>
+                <label id="lblDocStructureParagraphs" style="display: flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.65rem; border: 2px solid var(--border); background: #ffffff; color: var(--text-secondary); border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600;">
+                  <input type="radio" name="docStructureType" value="paragraphs" onchange="setDocStructureType('paragraphs')" style="accent-color: #2563eb;" />
+                  <span>📝 Párrafos / Fichas</span>
+                </label>
+              </div>
+            </div>
+            <div>
               <label class="form-label" style="font-size: 0.78rem; margin-bottom: 0.25rem;">Título del documento (en vivo):</label>
               <input type="text" id="docLiveTitleInput" class="form-control" value="DataHub - Documento Exportado" oninput="handleDocLiveTitleChange(this.value)" style="font-size: 0.82rem; padding: 0.3rem 0.6rem;" />
             </div>
@@ -2241,19 +2302,19 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
               <h1 class="doc-page-title" id="docPreviewTitle">DataHub - Documento Exportado</h1>
               <p class="doc-page-meta" id="docPreviewMeta">Exportado desde DataHub &bull; 0 filas &bull; 0 columnas</p>
             </div>
-            <div style="overflow-x: auto;">
+            <!-- Vista 2A: Formato Tabla -->
+            <div id="docsTableContainer" style="overflow-x: auto;">
               <table class="docs-table-view" id="docsPreviewTable">
                 <thead id="docsPreviewHead"></thead>
                 <tbody id="docsPreviewBody"></tbody>
               </table>
             </div>
+
+            <!-- Vista 2B: Formato Párrafos / Fichas de Texto -->
+            <div id="docsParagraphsContainer" class="hidden" style="margin-top: 0.75rem;">
+              <div id="docsParagraphsList"></div>
+            </div>
           </div>
-        </div>
-                  <span id="t_tableEmptyMsg">No hay datos para mostrar. Extrae información de una hoja o documento para comenzar.</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
         </div>
 
         <!-- Table Pagination Controls -->
@@ -2445,8 +2506,23 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
                   </div>
 
                   <!-- Opciones informativas exclusivas de Docs -->
-                  <div id="groupDocsOnlyFormat" class="hidden" style="grid-column: span 2; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); padding: 0.6rem 0.8rem; font-size: 0.78rem; color: #1e40af; margin-top: 0.5rem;">
-                    📘 <strong>Formato nativo para Google Docs:</strong> La tabla se creará con cabecera en azul Google (#1a73e8), texto blanco en negrita, bordes finos y filas alternadas con fondo suave.
+                  <div id="groupDocsOnlyFormat" class="hidden" style="grid-column: span 2; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); padding: 0.85rem 1rem; font-size: 0.82rem; color: #1e40af; margin-top: 0.5rem;">
+                    <div style="font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+                      <span>📘</span> <span>Estructura de Exportación a Google Docs:</span>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+                      <label id="lblExportDocStructureTable" style="display: flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.8rem; border: 2px solid #2563eb; background: #ffffff; color: #2563eb; border-radius: 4px; cursor: pointer; font-size: 0.82rem; font-weight: 600;">
+                        <input type="radio" name="exportDocStructureType" value="table" checked onchange="setDocStructureType('table')" style="accent-color: #2563eb;" />
+                        <span>📊 Formato Tabla (Matriz estructurada)</span>
+                      </label>
+                      <label id="lblExportDocStructureParagraphs" style="display: flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.8rem; border: 2px solid var(--border); background: #ffffff; color: var(--text-secondary); border-radius: 4px; cursor: pointer; font-size: 0.82rem; font-weight: 600;">
+                        <input type="radio" name="exportDocStructureType" value="paragraphs" onchange="setDocStructureType('paragraphs')" style="accent-color: #2563eb;" />
+                        <span>📝 Formato Párrafos / Fichas de Texto</span>
+                      </label>
+                    </div>
+                    <small style="color: #3b82f6; font-size: 0.75rem;" id="docStructureDesc">
+                      La tabla se creará con cabecera en azul Google (#1a73e8), texto blanco en negrita, bordes finos y filas alternadas.
+                    </small>
                   </div>
               </div>
             </div>
@@ -3044,6 +3120,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       }
       applyLanguageUI();
       setAppExportFormat(currentExportFormat);
+      setDocStructureType(currentDocStructure);
 
       // Protocolo file://
       if (window.location.protocol === 'file:') {
@@ -5042,6 +5119,67 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       }
     }
 
+    
+    let currentDocStructure = localStorage.getItem('datahub_doc_structure') || 'table';
+
+    function setDocStructureType(type = 'table') {
+      currentDocStructure = type;
+      localStorage.setItem('datahub_doc_structure', type);
+
+      // Radios in Filtros y Tabla
+      const rPanelTable = document.querySelector('input[name="docStructureType"][value="table"]');
+      const rPanelPara = document.querySelector('input[name="docStructureType"][value="paragraphs"]');
+      const lblPanelTable = document.getElementById('lblDocStructureTable');
+      const lblPanelPara = document.getElementById('lblDocStructureParagraphs');
+
+      // Radios in Export tab
+      const rExpTable = document.querySelector('input[name="exportDocStructureType"][value="table"]');
+      const rExpPara = document.querySelector('input[name="exportDocStructureType"][value="paragraphs"]');
+      const lblExpTable = document.getElementById('lblExportDocStructureTable');
+      const lblExpPara = document.getElementById('lblExportDocStructureParagraphs');
+      const structDesc = document.getElementById('docStructureDesc');
+
+      if (type === 'paragraphs') {
+        if (rPanelPara) rPanelPara.checked = true;
+        if (rExpPara) rExpPara.checked = true;
+
+        if (lblPanelTable) { lblPanelTable.style.border = '2px solid var(--border)'; lblPanelTable.style.background = '#ffffff'; lblPanelTable.style.color = 'var(--text-secondary)'; }
+        if (lblPanelPara) { lblPanelPara.style.border = '2px solid #2563eb'; lblPanelPara.style.background = '#eff6ff'; lblPanelPara.style.color = '#2563eb'; }
+
+        if (lblExpTable) { lblExpTable.style.border = '2px solid var(--border)'; lblExpTable.style.color = 'var(--text-secondary)'; }
+        if (lblExpPara) { lblExpPara.style.border = '2px solid #2563eb'; lblExpPara.style.color = '#2563eb'; }
+
+        const tblContainer = document.getElementById('docsTableContainer');
+        const paraContainer = document.getElementById('docsParagraphsContainer');
+        if (tblContainer) tblContainer.classList.add('hidden');
+        if (paraContainer) paraContainer.classList.remove('hidden');
+
+        if (structDesc) structDesc.textContent = currentLanguage === 'es'
+          ? 'Cada fila se exportará como una ficha de texto con encabezados destacados y campos organizados en párrafos.'
+          : 'Each row will be exported as a formatted text card with bold headers and paragraph fields.';
+      } else {
+        if (rPanelTable) rPanelTable.checked = true;
+        if (rExpTable) rExpTable.checked = true;
+
+        if (lblPanelTable) { lblPanelTable.style.border = '2px solid #2563eb'; lblPanelTable.style.background = '#eff6ff'; lblPanelTable.style.color = '#2563eb'; }
+        if (lblPanelPara) { lblPanelPara.style.border = '2px solid var(--border)'; lblPanelPara.style.background = '#ffffff'; lblPanelPara.style.color = 'var(--text-secondary)'; }
+
+        if (lblExpTable) { lblExpTable.style.border = '2px solid #2563eb'; lblExpTable.style.color = '#2563eb'; }
+        if (lblExpPara) { lblExpPara.style.border = '2px solid var(--border)'; lblExpPara.style.color = 'var(--text-secondary)'; }
+
+        const tblContainer = document.getElementById('docsTableContainer');
+        const paraContainer = document.getElementById('docsParagraphsContainer');
+        if (tblContainer) tblContainer.classList.remove('hidden');
+        if (paraContainer) paraContainer.classList.add('hidden');
+
+        if (structDesc) structDesc.textContent = currentLanguage === 'es'
+          ? 'La tabla se creará con cabecera en azul Google (#1a73e8), texto blanco en negrita, bordes finos y filas alternadas.'
+          : 'Table will be created with Google Blue header (#1a73e8), white bold text, fine borders, and alternating rows.';
+      }
+
+      renderMainTable();
+    }
+
     // Results Table Rendering & Pagination
     function renderMainTable() {
       const thead = document.getElementById('mainTableHead');
@@ -5109,6 +5247,35 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         docsBody.innerHTML = pageRows.map(row => `
           <tr>${row.map(cell => `<td>${escapeHtml(String(cell))}</td>`).join('')}</tr>
         `).join('');
+      }
+
+      // Render Párrafos / Fichas de Texto para Google Docs
+      const paraList = document.getElementById('docsParagraphsList');
+      if (paraList) {
+        if (currentDataset.headers.length === 0 || filteredRows.length === 0) {
+          paraList.innerHTML = `<div class="empty-state" style="padding: 2rem; text-align: center; color: #94a3b8;">${t('tableEmptyMsg')}</div>`;
+        } else {
+          paraList.innerHTML = pageRows.map((row, rIdx) => {
+            const rowNumber = startIdx + rIdx + 1;
+            const primaryVal = row[0] ? String(row[0]) : '';
+            return `
+              <div class="doc-paragraph-card">
+                <div class="card-head">
+                  <span>📄</span>
+                  <span>Registro #${rowNumber}${primaryVal ? ' — ' + escapeHtml(primaryVal) : ''}</span>
+                </div>
+                <div class="doc-fields-grid">
+                  ${currentDataset.headers.map((h, i) => `
+                    <div class="doc-field-item">
+                      <span class="doc-field-label">${escapeHtml(h)}</span>
+                      <span class="doc-field-value">${escapeHtml(String(row[i] ?? '')) || '<em style="color:#94a3b8; font-weight:normal;">(vacío)</em>'}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
       }
 
       pagInfo.textContent = `${currentLanguage === 'es' ? 'Mostrando' : 'Showing'} ${startIdx + 1} - ${endIdx} ${currentLanguage === 'es' ? 'de' : 'of'} ${filteredRows.length}`;
@@ -5533,6 +5700,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         const sourceRows = (scope === 'filtered') ? filteredRows : currentDataset.rows;
         const selectedColIndices = selectedColCheckboxes.map(cb => parseInt(cb.getAttribute('data-col-idx'), 10));
         const exportHeaders = selectedColIndices.map(idx => currentDataset.headers[idx]);
+        const structureMode = currentDocStructure;
 
         let targetDocId = null;
         let targetDocUrl = null;
@@ -5540,41 +5708,73 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         if (destMode === 'new') {
           progressText.textContent = currentLanguage === 'es' ? 'Creando documento en Google Docs...' : 'Creating Google Doc...';
 
-          // Construcción de tabla HTML nativa para que Google Drive la convierta con estilo
+          // Construcción HTML nativa para Google Drive (Tabla o Párrafos)
           let html = '<!DOCTYPE html><html><head><meta charset="UTF-8">';
-          html += `<style>
-            body { font-family: ${fontFamily}, sans-serif; font-size: ${fontSize}pt; color: #1e293b; line-height: 1.4; }
-            h1 { color: #1a73e8; font-size: 18pt; margin-top: 0; margin-bottom: 6pt; }
-            .meta { color: #64748b; font-size: 9.5pt; margin-bottom: 14pt; }
-            table { border-collapse: collapse; width: 100%; margin-top: 8pt; margin-bottom: 16pt; }
-            th { background-color: #1a73e8; color: #ffffff; font-weight: bold; padding: 7pt 8pt; text-align: left; border: 1px solid #1a73e8; font-size: ${Math.max(8, parseInt(fontSize, 10))}pt; }
-            td { padding: 6pt 8pt; border: 1px solid #cbd5e1; font-size: ${fontSize}pt; }
-            tr:nth-child(even) td { background-color: #f8fafc; }
-          </style></head><body>`;
 
-          if (includeTitleRow) {
-            html += `<h1>${escapeHtml(docTitle)}</h1>`;
-            html += `<p class="meta">Exportado desde DataHub el ${new Date().toLocaleString()} &bull; Total de filas: ${sourceRows.length} &bull; Columnas: ${exportHeaders.length}</p>`;
-          }
+          if (structureMode === 'paragraphs') {
+            html += `<style>
+              body { font-family: ${fontFamily}, sans-serif; font-size: ${fontSize}pt; color: #1e293b; line-height: 1.6; }
+              h1 { color: #1a73e8; font-size: 18pt; margin-top: 0; margin-bottom: 6pt; font-weight: bold; }
+              .meta { color: #64748b; font-size: 9.5pt; margin-bottom: 16pt; border-bottom: 1pt solid #cbd5e1; padding-bottom: 8pt; }
+              .doc-record { margin-bottom: 18pt; padding-bottom: 14pt; border-bottom: 1pt solid #e2e8f0; }
+              h2.record-header { font-size: 12.5pt; color: #1a73e8; margin-top: 0; margin-bottom: 6pt; font-weight: bold; }
+              ul.record-fields { margin: 4pt 0 0 16pt; padding: 0; }
+              li.field-row { margin-bottom: 4pt; }
+              strong.field-name { color: #334155; }
+            </style></head><body>`;
 
-          html += '<table>';
-          if (includeHeaders) {
-            html += '<thead><tr>';
-            exportHeaders.forEach(h => {
-              html += `<th>${escapeHtml(h)}</th>`;
+            if (includeTitleRow) {
+              html += `<h1>${escapeHtml(docTitle)}</h1>`;
+              html += `<p class="meta">Exportado desde DataHub el ${new Date().toLocaleString()} &bull; Total de filas: ${sourceRows.length} &bull; Columnas: ${exportHeaders.length}</p>`;
+            }
+
+            sourceRows.forEach((row, rIdx) => {
+              const primaryVal = row[selectedColIndices[0]] ? String(row[selectedColIndices[0]]) : '';
+              html += `<div class="doc-record">`;
+              html += `<h2 class="record-header">Registro #${rIdx + 1}${primaryVal ? ' — ' + escapeHtml(primaryVal) : ''}</h2>`;
+              html += `<ul class="record-fields">`;
+              selectedColIndices.forEach((colIdx, i) => {
+                html += `<li class="field-row"><strong class="field-name">${escapeHtml(exportHeaders[i])}:</strong> ${escapeHtml(String(row[colIdx] ?? ''))}</li>`;
+              });
+              html += `</ul></div>`;
             });
-            html += '</tr></thead>';
-          }
 
-          html += '<tbody>';
-          sourceRows.forEach(row => {
-            html += '<tr>';
-            selectedColIndices.forEach(idx => {
-              html += `<td>${escapeHtml(String(row[idx] ?? ''))}</td>`;
+            html += '</body></html>';
+          } else {
+            html += `<style>
+              body { font-family: ${fontFamily}, sans-serif; font-size: ${fontSize}pt; color: #1e293b; line-height: 1.4; }
+              h1 { color: #1a73e8; font-size: 18pt; margin-top: 0; margin-bottom: 6pt; }
+              .meta { color: #64748b; font-size: 9.5pt; margin-bottom: 14pt; }
+              table { border-collapse: collapse; width: 100%; margin-top: 8pt; margin-bottom: 16pt; }
+              th { background-color: #1a73e8; color: #ffffff; font-weight: bold; padding: 7pt 8pt; text-align: left; border: 1px solid #1a73e8; font-size: ${Math.max(8, parseInt(fontSize, 10))}pt; }
+              td { padding: 6pt 8pt; border: 1px solid #cbd5e1; font-size: ${fontSize}pt; }
+              tr:nth-child(even) td { background-color: #f8fafc; }
+            </style></head><body>`;
+
+            if (includeTitleRow) {
+              html += `<h1>${escapeHtml(docTitle)}</h1>`;
+              html += `<p class="meta">Exportado desde DataHub el ${new Date().toLocaleString()} &bull; Total de filas: ${sourceRows.length} &bull; Columnas: ${exportHeaders.length}</p>`;
+            }
+
+            html += '<table>';
+            if (includeHeaders) {
+              html += '<thead><tr>';
+              exportHeaders.forEach(h => {
+                html += `<th>${escapeHtml(h)}</th>`;
+              });
+              html += '</tr></thead>';
+            }
+
+            html += '<tbody>';
+            sourceRows.forEach(row => {
+              html += '<tr>';
+              selectedColIndices.forEach(idx => {
+                html += `<td>${escapeHtml(String(row[idx] ?? ''))}</td>`;
+              });
+              html += '</tr>';
             });
-            html += '</tr>';
-          });
-          html += '</tbody></table></body></html>';
+            html += '</tbody></table></body></html>';
+          }
 
           const boundary = '-------314159265358979323846';
           const delimiter = "\r\n--" + boundary + "\r\n";
@@ -5643,14 +5843,26 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
           let textToInsert = `\n\n════════════════════════════════════════════════════════════════\n`;
           textToInsert += `${docTitle}\n`;
           textToInsert += `Exportado el: ${new Date().toLocaleString()} | Filas: ${sourceRows.length}\n`;
-          textToInsert += `════════════════════════════════════════════════════════════════\n`;
-          if (includeHeaders) {
-            textToInsert += exportHeaders.join('  |  ') + '\n';
-            textToInsert += exportHeaders.map(() => '----------------').join('  |  ') + '\n';
+          textToInsert += `════════════════════════════════════════════════════════════════\n\n`;
+
+          if (structureMode === 'paragraphs') {
+            sourceRows.forEach((row, rIdx) => {
+              const primaryVal = row[selectedColIndices[0]] ? String(row[selectedColIndices[0]]) : '';
+              textToInsert += `▶ Registro #${rIdx + 1}${primaryVal ? ' — ' + primaryVal : ''}\n`;
+              selectedColIndices.forEach((colIdx, i) => {
+                textToInsert += `  • ${exportHeaders[i]}: ${String(row[colIdx] ?? '')}\n`;
+              });
+              textToInsert += '\n';
+            });
+          } else {
+            if (includeHeaders) {
+              textToInsert += exportHeaders.join('  |  ') + '\n';
+              textToInsert += exportHeaders.map(() => '----------------').join('  |  ') + '\n';
+            }
+            sourceRows.forEach(row => {
+              textToInsert += selectedColIndices.map(idx => String(row[idx] ?? '')).join('  |  ') + '\n';
+            });
           }
-          sourceRows.forEach(row => {
-            textToInsert += selectedColIndices.map(idx => String(row[idx] ?? '')).join('  |  ') + '\n';
-          });
 
           await apiFetch(`https://docs.googleapis.com/v1/documents/${targetDocId}:batchUpdate`, {
             method: 'POST',
