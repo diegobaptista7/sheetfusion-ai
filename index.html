@@ -1517,6 +1517,69 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       gap: 0.5rem;
     }
 
+  
+    /* =====================================================================
+       Modos de Formato (Google Sheets vs Google Docs)
+       ===================================================================== */
+    .btn-format-toggle {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn-format-toggle:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    .docs-preview-sheet {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+      border-radius: 4px;
+      padding: 2.25rem 2.5rem;
+      max-width: 980px;
+      margin: 0 auto;
+      color: #1e293b;
+      font-family: Arial, sans-serif;
+      transition: all 0.2s ease;
+    }
+    .doc-page-header {
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .doc-page-title {
+      font-size: 1.5rem;
+      color: #1a73e8;
+      font-weight: 700;
+      margin: 0 0 0.35rem 0;
+    }
+    .doc-page-meta {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin: 0;
+    }
+    .docs-table-view {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
+    }
+    .docs-table-view th {
+      background-color: #1a73e8;
+      color: #ffffff;
+      font-weight: 600;
+      padding: 8px 12px;
+      text-align: left;
+      border: 1px solid #1a73e8;
+      font-size: 0.88rem;
+    }
+    .docs-table-view td {
+      padding: 7px 12px;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+    }
+    .docs-table-view tr:nth-child(even) td {
+      background-color: #f8fafc;
+    }
+
   </style>
 </head>
 <body>
@@ -1871,6 +1934,28 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
          =================================================================== -->
     <section id="tab-filters" class="tab-pane">
 
+      <!-- Selector de Formato Objetivo: Google Sheets vs Google Docs -->
+      <div class="card" style="margin-bottom: 1rem; border: 1.5px solid var(--border); background: var(--surface);">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span style="font-size: 1.35rem;">🎯</span>
+            <div>
+              <strong style="font-size: 0.95rem; color: var(--text); display: block;" id="t_formatModeTitle">Formato de Trabajo Objetivo:</strong>
+              <small style="color: var(--text-secondary); font-size: 0.78rem;" id="formatModeSubtitle">Elige si trabajarás tus datos para Hoja de Cálculo (Sheets) o Documento de Texto (Docs).</small>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 0.6rem;">
+            <button type="button" class="btn btn-sm btn-format-toggle" id="btnToggleSheetsMode" onclick="setAppExportFormat('sheets')" style="display: flex; align-items: center; gap: 0.45rem; font-weight: 600; padding: 0.45rem 1rem; border-radius: 6px; cursor: pointer; border: 2px solid #107c41; background: #f0fdf4; color: #107c41;">
+              <span>📗</span> <span>Google Sheets</span>
+            </button>
+            <button type="button" class="btn btn-sm btn-format-toggle" id="btnToggleDocsMode" onclick="setAppExportFormat('docs')" style="display: flex; align-items: center; gap: 0.45rem; font-weight: 600; padding: 0.45rem 1rem; border-radius: 6px; cursor: pointer; border: 2px solid var(--border); background: #ffffff; color: var(--text-secondary);">
+              <span>📘</span> <span>Google Docs</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Active Dataset Summary Ribbon -->
       <div class="stats-ribbon">
         <div class="stat-item">
@@ -2026,7 +2111,96 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
           </div>
         </div>
       </div>
-<!-- Results Table -->
+
+      <!-- Ajustes específicos de Google Sheets en Filtros y Tabla -->
+      <div class="card" id="panelSettingsSheets" style="margin-bottom: 1rem; border-left: 4px solid #107c41;">
+        <div class="card-header" style="padding: 0.6rem 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <strong style="color: #107c41; font-size: 0.88rem;">⚙️ Ajustes para Google Sheets</strong>
+            <span style="font-size: 0.75rem; color: var(--text-secondary);">(Configuración para la vista y exportación de hojas de cálculo)</span>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="goToExportFormat('sheets')" style="background:#107c41; border-color:#0b5c30;">
+            🚀 <span>Exportar a Sheets</span>
+          </button>
+        </div>
+        <div class="card-body" style="padding: 0.75rem 1rem;">
+          <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center; font-size: 0.82rem;">
+            <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+              <input type="checkbox" id="chkSheetsFreezeHeader" checked onchange="document.getElementById('checkExportFreezeHeader').checked = this.checked;" />
+              <span>Congelar primera fila</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+              <input type="checkbox" id="chkSheetsAutoResize" checked onchange="document.getElementById('checkExportAutoResize').checked = this.checked;" />
+              <span>Autoajustar ancho de columnas</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+              <input type="checkbox" id="chkSheetsApplyStyles" checked onchange="document.getElementById('checkExportApplyStyles').checked = this.checked;" />
+              <span>Color azul Google en cabecera</span>
+            </label>
+            <div style="display: flex; align-items: center; gap: 0.4rem; margin-left: auto;">
+              <span>Ajuste de celdas:</span>
+              <select id="quickWrapSelect" class="form-control" style="font-size: 0.78rem; padding: 0.2rem 0.5rem; width: auto;" onchange="document.getElementById('exportWrapStrategy').value = this.value;">
+                <option value="CLIP" selected>Recortado</option>
+                <option value="WRAP">Ajuste de línea (Wrap)</option>
+                <option value="OVERFLOW_CELL">Desbordar</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ajustes específicos de Google Docs en Filtros y Tabla -->
+      <div class="card hidden" id="panelSettingsDocs" style="margin-bottom: 1rem; border-left: 4px solid #2563eb;">
+        <div class="card-header" style="padding: 0.6rem 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <strong style="color: #2563eb; font-size: 0.88rem;">⚙️ Ajustes para Google Docs</strong>
+            <span style="font-size: 0.75rem; color: var(--text-secondary);">(Configuración para la vista previa y generación del documento)</span>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="goToExportFormat('docs')" style="background:#2563eb; border-color:#1d4ed8;">
+            🚀 <span>Exportar a Docs</span>
+          </button>
+        </div>
+        <div class="card-body" style="padding: 0.75rem 1rem;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; align-items: center; font-size: 0.82rem;">
+            <div>
+              <label class="form-label" style="font-size: 0.78rem; margin-bottom: 0.25rem;">Título del documento (en vivo):</label>
+              <input type="text" id="docLiveTitleInput" class="form-control" value="DataHub - Documento Exportado" oninput="handleDocLiveTitleChange(this.value)" style="font-size: 0.82rem; padding: 0.3rem 0.6rem;" />
+            </div>
+            <div>
+              <label class="form-label" style="font-size: 0.78rem; margin-bottom: 0.25rem;">Tipografía del Documento:</label>
+              <select id="docFontSelect" class="form-control" style="font-size: 0.82rem; padding: 0.3rem 0.6rem;" onchange="handleDocFontChange(this.value)">
+                <option value="Arial" selected>Arial (Recomendado)</option>
+                <option value="Calibri">Calibri</option>
+                <option value="Roboto">Roboto</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Verdana">Verdana</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" style="font-size: 0.78rem; margin-bottom: 0.25rem;">Tamaño de letra de tabla:</label>
+              <select id="docFontSizeSelect" class="form-control" style="font-size: 0.82rem; padding: 0.3rem 0.6rem;" onchange="handleDocFontSizeChange(this.value)">
+                <option value="8">8 pt (Compacto)</option>
+                <option value="9">9 pt</option>
+                <option value="10" selected>10 pt (Estándar)</option>
+                <option value="11">11 pt</option>
+                <option value="12">12 pt (Grande)</option>
+              </select>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.35rem; justify-content: center;">
+              <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                <input type="checkbox" id="chkDocIncludeMeta" checked onchange="handleDocMetaToggle(this.checked)" />
+                <span>Incluir cabecera con fecha y filas</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                <input type="checkbox" id="chkDocStriped" checked onchange="handleDocStripedToggle(this.checked)" />
+                <span>Filas alternadas con fondo suave</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Table -->
       <div class="card">
         <div class="card-header">
           <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -2045,13 +2219,36 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
           </div>
         </div>
 
-        <div class="table-container" style="border: none; border-radius: 0; max-height: 520px;">
+        <!-- Vista 1: Cuadrícula de Hoja de Cálculo (Google Sheets) -->
+        <div id="sheetsTableWrapper" class="table-container" style="border: none; border-radius: 0; max-height: 520px;">
           <table class="data-table" id="mainDataTable">
             <thead id="mainTableHead"></thead>
             <tbody id="mainTableBody">
               <tr>
                 <td colspan="100" class="text-center" style="padding: 3rem; color: var(--text-secondary);">
                   <div class="empty-icon">📊</div>
+                  <span id="t_tableEmptyMsg">No hay datos para mostrar. Extrae información de una hoja o documento para comenzar.</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Vista 2: Hoja de Documento (Google Docs) -->
+        <div id="docsPreviewWrapper" class="hidden" style="padding: 1.5rem; background: #f8fafc; border-top: 1px solid var(--border); overflow-x: auto; max-height: 520px;">
+          <div class="docs-preview-sheet" id="docsSheetElement">
+            <div class="doc-page-header" id="docPreviewHeader">
+              <h1 class="doc-page-title" id="docPreviewTitle">DataHub - Documento Exportado</h1>
+              <p class="doc-page-meta" id="docPreviewMeta">Exportado desde DataHub &bull; 0 filas &bull; 0 columnas</p>
+            </div>
+            <div style="overflow-x: auto;">
+              <table class="docs-table-view" id="docsPreviewTable">
+                <thead id="docsPreviewHead"></thead>
+                <tbody id="docsPreviewBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
                   <span id="t_tableEmptyMsg">No hay datos para mostrar. Extrae información de una hoja o documento para comenzar.</span>
                 </td>
               </tr>
@@ -2846,6 +3043,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         currentLanguage = savedLang;
       }
       applyLanguageUI();
+      setAppExportFormat(currentExportFormat);
 
       // Protocolo file://
       if (window.location.protocol === 'file:') {
@@ -4760,6 +4958,90 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       }
     }
 
+    
+    // =========================================================================
+    // CONTROLADOR DE FORMATO OBJETIVO: GOOGLE SHEETS VS GOOGLE DOCS
+    // =========================================================================
+    let currentExportFormat = localStorage.getItem('datahub_export_format') || 'sheets';
+
+    function setAppExportFormat(format = 'sheets') {
+      currentExportFormat = format;
+      localStorage.setItem('datahub_export_format', format);
+
+      const btnSheets = document.getElementById('btnToggleSheetsMode');
+      const btnDocs = document.getElementById('btnToggleDocsMode');
+      const panelSheets = document.getElementById('panelSettingsSheets');
+      const panelDocs = document.getElementById('panelSettingsDocs');
+      const sheetsWrapper = document.getElementById('sheetsTableWrapper');
+      const docsWrapper = document.getElementById('docsPreviewWrapper');
+      const tableTitle = document.getElementById('t_tableTitle');
+
+      if (format === 'docs') {
+        if (btnSheets) { btnSheets.style.border = '2px solid var(--border)'; btnSheets.style.background = '#ffffff'; btnSheets.style.color = 'var(--text-secondary)'; }
+        if (btnDocs) { btnDocs.style.border = '2px solid #2563eb'; btnDocs.style.background = '#eff6ff'; btnDocs.style.color = '#2563eb'; }
+        if (panelSheets) panelSheets.classList.add('hidden');
+        if (panelDocs) panelDocs.classList.remove('hidden');
+        if (sheetsWrapper) sheetsWrapper.classList.add('hidden');
+        if (docsWrapper) docsWrapper.classList.remove('hidden');
+        if (tableTitle) tableTitle.textContent = currentLanguage === 'es' ? 'Vista Previa de Documento (Google Docs)' : 'Document Preview (Google Docs)';
+      } else {
+        if (btnSheets) { btnSheets.style.border = '2px solid #107c41'; btnSheets.style.background = '#f0fdf4'; btnSheets.style.color = '#107c41'; }
+        if (btnDocs) { btnDocs.style.border = '2px solid var(--border)'; btnDocs.style.background = '#ffffff'; btnDocs.style.color = 'var(--text-secondary)'; }
+        if (panelSheets) panelSheets.classList.remove('hidden');
+        if (panelDocs) panelDocs.classList.add('hidden');
+        if (sheetsWrapper) sheetsWrapper.classList.remove('hidden');
+        if (docsWrapper) docsWrapper.classList.add('hidden');
+        if (tableTitle) tableTitle.textContent = currentLanguage === 'es' ? 'Resultados de Datos (Google Sheets)' : 'Data Results (Google Sheets)';
+      }
+
+      // Sincronizar radio del tab de exportación
+      const radio = document.querySelector(`input[name="exportFormatType"][value="${format}"]`);
+      if (radio && !radio.checked) {
+        radio.checked = true;
+      }
+      handleExportFormatTypeChange(false);
+      renderMainTable();
+    }
+
+    function handleDocLiveTitleChange(val) {
+      const docTitleEl = document.getElementById('docPreviewTitle');
+      if (docTitleEl) docTitleEl.textContent = val || 'DataHub - Documento Exportado';
+      const exportTitleInput = document.getElementById('exportNewTitle');
+      if (exportTitleInput) exportTitleInput.value = val;
+    }
+
+    function handleDocFontChange(font) {
+      const sheet = document.getElementById('docsSheetElement');
+      if (sheet) sheet.style.fontFamily = font;
+      const exportFont = document.getElementById('exportFontFamily');
+      if (exportFont) exportFont.value = font;
+    }
+
+    function handleDocFontSizeChange(size) {
+      const tbl = document.getElementById('docsPreviewTable');
+      if (tbl) tbl.style.fontSize = size + 'pt';
+      const exportFontSize = document.getElementById('exportFontSize');
+      if (exportFontSize) exportFontSize.value = size;
+    }
+
+    function handleDocMetaToggle(checked) {
+      const header = document.getElementById('docPreviewHeader');
+      if (header) header.style.display = checked ? '' : 'none';
+      const chkTitle = document.getElementById('checkExportIncludeTitleRow');
+      if (chkTitle) chkTitle.checked = checked;
+    }
+
+    function handleDocStripedToggle(checked) {
+      const tbl = document.getElementById('docsPreviewTable');
+      if (tbl) {
+        if (checked) {
+          tbl.querySelectorAll('tr:nth-child(even) td').forEach(td => td.style.backgroundColor = '#f8fafc');
+        } else {
+          tbl.querySelectorAll('tr:nth-child(even) td').forEach(td => td.style.backgroundColor = '#ffffff');
+        }
+      }
+    }
+
     // Results Table Rendering & Pagination
     function renderMainTable() {
       const thead = document.getElementById('mainTableHead');
@@ -4811,6 +5093,23 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       tbody.innerHTML = pageRows.map(row => `
         <tr>${row.map(cell => `<td title="${escapeHtml(String(cell))}">${escapeHtml(String(cell))}</td>`).join('')}</tr>
       `).join('');
+
+      // Vista Previa de Documento (Google Docs)
+      const docsHead = document.getElementById('docsPreviewHead');
+      const docsBody = document.getElementById('docsPreviewBody');
+      const docTitleEl = document.getElementById('docPreviewTitle');
+      const docMetaEl = document.getElementById('docPreviewMeta');
+      const liveTitle = document.getElementById('docLiveTitleInput')?.value || document.getElementById('exportNewTitle')?.value || 'DataHub - Documento Exportado';
+
+      if (docTitleEl) docTitleEl.textContent = liveTitle;
+      if (docMetaEl) docMetaEl.textContent = `${currentLanguage === 'es' ? 'Exportado desde DataHub' : 'Exported from DataHub'} • ${filteredRows.length} ${currentLanguage === 'es' ? 'filas' : 'rows'} • ${currentDataset.headers.length} ${currentLanguage === 'es' ? 'columnas' : 'columns'}`;
+
+      if (docsHead && docsBody) {
+        docsHead.innerHTML = `<tr>` + currentDataset.headers.map(h => `<th>${escapeHtml(h)}</th>`).join('') + `</tr>`;
+        docsBody.innerHTML = pageRows.map(row => `
+          <tr>${row.map(cell => `<td>${escapeHtml(String(cell))}</td>`).join('')}</tr>
+        `).join('');
+      }
 
       pagInfo.textContent = `${currentLanguage === 'es' ? 'Mostrando' : 'Showing'} ${startIdx + 1} - ${endIdx} ${currentLanguage === 'es' ? 'de' : 'of'} ${filteredRows.length}`;
       pageIndicator.textContent = `${currentLanguage === 'es' ? 'Página' : 'Page'} ${currentPage} / ${totalPages}`;
