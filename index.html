@@ -6042,16 +6042,16 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
         let theadRow = '';
         if (incHeaders) {
           theadRow = '<tr>' + exportHeaders.map(function(h) {
-            return '<th style="background:#1a73e8;color:#fff;padding:6px 10px;font-weight:bold;border:1px solid #ddd;">' + h + '</th>';
+            return '<th style="background:#1a73e8;color:#fff;padding:6px 10px;font-weight:bold;border:1px solid #ddd;word-wrap:break-word;overflow-wrap:break-word;white-space:normal;">' + h + '</th>';
           }).join('') + '</tr>';
         }
         let tbodyRows = exportRows.map(function(row, ri) {
           var bg = ri % 2 === 1 ? '#f8fafc' : '#ffffff';
           return '<tr>' + row.map(function(cell) {
-            return '<td style="padding:5px 10px;border:1px solid #ddd;background:' + bg + ';">' + cell + '</td>';
+            return '<td style="padding:5px 10px;border:1px solid #ddd;background:' + bg + ';word-wrap:break-word;overflow-wrap:break-word;white-space:normal;max-width:200px;">' + cell + '</td>';
           }).join('') + '</tr>';
         }).join('');
-        bodyHtml = '<table style="border-collapse:collapse;width:100%;font-family:' + font + ';font-size:' + fontSize + 'pt;">' + theadRow + tbodyRows + '</table>';
+        bodyHtml = '<table style="border-collapse:collapse;width:100%;margin:0 auto;table-layout:fixed;mso-table-lspace:0pt;mso-table-rspace:0pt;font-family:' + font + ';font-size:' + fontSize + 'pt;">' + theadRow + tbodyRows + '</table>';
       } else {
         bodyHtml = exportRows.map(function(row, ri) {
           var content = '';
@@ -6079,7 +6079,7 @@ GUIA DE CONFIGURACION DE OAUTH 2.0 / GOOGLE CLOUD CONSOLE SETUP GUIDE:
       var fullHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">' +
         '<head><meta charset="utf-8"><title>' + docTitle + '</title>' +
         '<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>90</w:Zoom><w:DoNotOptimizeForBrowser/></w:WordDocument></xml><![endif]-->' +
-        '<style>body{font-family:' + font + ';font-size:' + fontSize + 'pt;margin:1.5cm;}</style>' +
+        '<style>body{font-family:' + font + ';font-size:' + fontSize + 'pt;margin:1.5cm;}table{border-collapse:collapse;width:100%;table-layout:fixed;}td,th{word-wrap:break-word;overflow-wrap:break-word;}</style>' +
         '</head><body>' + titleBlock + bodyHtml + '</body></html>';
       var blob = new Blob(['﻿', fullHtml], { type: 'application/msword' });
       var url = URL.createObjectURL(blob);
